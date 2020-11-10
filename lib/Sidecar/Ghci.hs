@@ -68,3 +68,14 @@ withGhci command action = liftIO $ Process.withCreateProcess processConfig setup
 
       _ ->
         fail "Failed to create GHCi handles"
+
+
+exit :: GhciM ()
+exit = do
+  GhciHandle{stdinHandle, stdoutHandle, stderrHandle, processHandle} <- ask
+  liftIO $ Process.cleanupProcess
+    ( Just stdinHandle
+    , Just stdoutHandle
+    , Just stderrHandle
+    , processHandle
+    )
