@@ -53,8 +53,11 @@ common execuable
 library
   import: common
   hs-source-dirs: lib
+  build-depends:
+    , process
   exposed-modules:
     , Sidecar
+    , Sidecar.Ghci
 
 
 executable sidecar
