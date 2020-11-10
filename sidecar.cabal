@@ -50,8 +50,15 @@ common execuable
     -with-rtsopts=-N
 
 
+common splint
+  build-depends:
+    , splint
+  ghc-options:
+    -fplugin=Splint
+
+
 library
-  import: common
+  import: common, splint
   hs-source-dirs: lib
   build-depends:
     , process
