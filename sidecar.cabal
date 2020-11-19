@@ -13,8 +13,8 @@ copyright:   2020 Evan Relf
 
 common common
   build-depends:
-    , base   ^>= 4.13.0
-    , relude ^>= 0.7.0
+    , base
+    , relude
   mixins:
     , base hiding (Prelude)
     , relude (Relude as Prelude, Relude.Monad)
@@ -51,17 +51,20 @@ common execuable
 
 
 common splint
-  build-depends:
-    , splint
-  ghc-options:
-    -fplugin=Splint
+  build-depends: splint
+  ghc-options: -fplugin=Splint
 
 
 library
   import: common, splint
   hs-source-dirs: lib
   build-depends:
+    , fused-effects
+    , fused-effects-th
+    , generic-optics
+    , optics
     , process
+    , string-interpolate
   exposed-modules:
     , Sidecar
     , Sidecar.Ghci
