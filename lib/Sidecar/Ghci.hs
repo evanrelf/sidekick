@@ -1,5 +1,4 @@
 {-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 
 module Sidecar.Ghci
   ( GhciM
@@ -32,7 +31,7 @@ data GhciHandle = GhciHandle
   }
 
 
-withGhci :: forall m a. MonadIO m => Text -> GhciM a -> m a
+withGhci :: MonadIO m => Text -> GhciM () -> m ()
 withGhci command action = liftIO $ Process.withCreateProcess processConfig setup
   where
   processConfig :: Process.CreateProcess
@@ -49,7 +48,7 @@ withGhci command action = liftIO $ Process.withCreateProcess processConfig setup
     -> Maybe Handle
     -> Maybe Handle
     -> Process.ProcessHandle
-    -> IO a
+    -> IO ()
   setup maybeStdinHandle maybeStdoutHandle maybeStderrHandle processHandle =
     case (maybeStdinHandle, maybeStdoutHandle, maybeStderrHandle) of
       (Just stdinHandle, Just stdoutHandle, Just stderrHandle) -> do
