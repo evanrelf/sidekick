@@ -3,15 +3,12 @@ let
     import ./nix/override-haskell-packages.nix {
       packages = {
         "sidecar" = pkgs.nix-gitignore.gitignoreSource [ ./.nixignore ] ./.;
-        "fused-effects" = "1.1.0.0";
-        "fused-effects-th" = "0.1.0.2";
         "optics" = "0.3";
         "optics-core" = "0.3.0.1";
         "optics-extra" = "0.3";
         "optics-th" = "0.3.0.2";
       };
       overrides = {
-        "fused-effects-th" = oldCabal: { doCheck = false; };
         "relude" = oldCabal: {
           patches = (oldCabal.patches or []) ++ [ ./nix/patches/relude.patch ];
         };

@@ -28,6 +28,7 @@ common common
     , DerivingVia
     , GeneralizedNewtypeDeriving
     , LambdaCase
+    , NumericUnderscores
     , OverloadedStrings
   ghc-options:
     -Wall
@@ -50,24 +51,38 @@ common execuable
     -with-rtsopts=-N
 
 
+common optics
+  build-depends: optics
+  default-extensions:
+    , DataKinds
+    , DuplicateRecordFields
+    , FlexibleInstances
+    , MultiParamTypeClasses
+    , OverloadedLabels
+    , TypeFamilies
+    , UndecidableInstances
+
+
 common splint
   build-depends: splint
   ghc-options: -fplugin=Splint
 
 
 library
-  import: common, splint
+  import: common, optics, splint
   hs-source-dirs: lib
   build-depends:
-    , fused-effects
-    , fused-effects-th
-    , generic-optics
+    , async
     , optics
     , process
+    , random
+    , streamly
     , string-interpolate
+    , text
   exposed-modules:
     , Sidecar
     , Sidecar.Ghci
+    , Sidecar.Ghci.Internal
 
 
 executable sidecar
