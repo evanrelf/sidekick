@@ -197,7 +197,6 @@ receive ghci = do
         Streamly.repeatM (Text.IO.hGetLine handle)
           & Streamly.takeWhile (/= separator)
           & Streamly.filter (/= command)
-          & Streamly.filter (not . Text.null)
           & Streamly.map (`Text.snoc` '\n')
           & Streamly.foldl' (<>) mempty
           & fmap Text.stripEnd
