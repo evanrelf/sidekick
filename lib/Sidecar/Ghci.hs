@@ -1,11 +1,13 @@
+-- | Interact with a live GHCi session
+
 module Sidecar.Ghci
-  ( module X
+  (
+  -- * Start GHCi session
+    withGhci
+  -- * Operations
+  , run
+  , run_
   )
 where
 
-import Sidecar.Ghci.Internal as X
-  ( Ghci
-  , withGhci
-  , run
-  , query
-  )
+import Sidecar.Ghci.Internal
