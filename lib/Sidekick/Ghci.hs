@@ -23,6 +23,8 @@ import Sidekick.Ghci.Internal
   , cancel
   )
 
+import qualified Control.Exception as Exception
+import qualified Data.Char as Char
 import qualified Text.Megaparsec as Megaparsec
 import qualified Text.Megaparsec.Char as Megaparsec
 
@@ -37,7 +39,9 @@ getCwd
 getCwd ghci = do
   (rawPaths, _) <- run ghci ":show paths"
 
-  undefined
+  case Megaparsec.parse parseCwd "<interactive>" rawPaths of
+    Left err -> Exception.throwIO err
+    Right x -> pure x
 
 
 -- | Return currently loaded modules, parsed from the @:show modules@ command
@@ -49,18 +53,28 @@ getModules
 getModules ghci = do
   (rawModules, _) <- run ghci ":show modules"
 
-  undefined
+  forM (lines rawModules) \rawModule ->
+    case Megaparsec.parse parseModule "<interactive>" rawModule of
+      Left err -> Exception.throwIO err
+      Right x -> pure x
 
 
 type Parser = Megaparsec.Parsec Void Text
 
 
-type ParseErrorBundle = Megaparsec.ParseErrorBundle Void Text
+parseCwd :: Parser FilePath
+parseCwd = do
+  _ <- Megaparsec.string "current working directory:"
+  Megaparsec.space1
+  cwd <- Megaparsec.takeWhile1P Nothing (/= '\n')
+  pure (toString cwd)
 
 
-parseCwd :: Text -> Parser FilePath
-parseCwd input = undefined
-
-
-parseModule :: Text -> Parser (Text, FilePath)
-parseModule input = undefined
+parseModule :: Parser (Text, FilePath)
+parseModule = do
+  moduleName <- Megaparsec.takeWhile1P Nothing (not . Char.isSpace)
+  Megaparsec.space1
+  _ <- Megaparsec.char '('
+  Megaparsec.space1
+  modulePath <- Megaparsec.takeWhile1P Nothing (/= ',')
+  pure (moduleName, toString modulePath)
