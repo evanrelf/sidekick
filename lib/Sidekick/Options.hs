@@ -1,5 +1,6 @@
 {-# LANGUAGE ApplicativeDo #-}
 {-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Sidekick.Options
   ( Options (..)
@@ -7,12 +8,16 @@ module Sidekick.Options
   )
 where
 
+import qualified Optics.TH
 import qualified Options.Applicative as Options
 
 
 data Options = Options
   { command :: Maybe Text
   }
+
+
+Optics.TH.makeFieldLabelsWith Optics.TH.noPrefixFieldLabels ''Options
 
 
 getOptions :: IO Options

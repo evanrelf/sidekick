@@ -1,6 +1,10 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module Sidekick.UI (main) where
+module Sidekick.UI
+  ( Event (..)
+  , start
+  )
+where
 
 import Optics ((.~), (^.))
 
@@ -25,8 +29,8 @@ data Event
 type Name = ()
 
 
-main :: Brick.BChan Event -> IO ()
-main eventChannel = do
+start :: Brick.BChan Event -> IO ()
+start eventChannel = do
   let buildVtyHandle = Vty.mkVty Vty.defaultConfig
   vtyHandle <- buildVtyHandle
 
@@ -43,7 +47,7 @@ main eventChannel = do
 
 initialState :: State
 initialState = State
-  { text = "Hello world"
+  { text = "Loading..."
   }
 
 
