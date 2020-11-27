@@ -86,6 +86,7 @@ library
   hs-source-dirs: lib
   build-depends:
     , async
+    , megaparsec
     , optics
     , process
     , random
