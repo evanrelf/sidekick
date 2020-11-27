@@ -13,9 +13,9 @@ module Sidekick.Ghci.Internal
   -- * Start GHCi session
   , withGhci
   -- * High-level operations
-  -- | High-level wrappers for 'send', 'receive', and 'discard'. Calls to 'send'
-  -- are always followed by 'receive' or 'discard' to ensure GHCi is in a good
-  -- state for the next command.
+  -- | High-level wrappers for 'send', 'receive', and 'receive_'. Calls to 'send'
+  -- are always followed by 'receive' or 'receive_' to ensure the GHCi session
+  -- is in a good state for the next command.
   , run
   , run_
   , cancel
@@ -24,7 +24,7 @@ module Sidekick.Ghci.Internal
   -- providing no checks or guarantees that you maintain a good state.
   , send
   , receive
-  , discard
+  , receive_
   -- * Debugging
   , interact
   )
@@ -149,7 +149,7 @@ run_
   -> IO ()
 run_ ghci command = do
   send ghci command
-  discard ghci
+  receive_ ghci
 
 
 -- | Send Ctrl-C (@SIGINT@) to GHCi session. Useful for interrupting
@@ -208,11 +208,11 @@ receive ghci = do
 
 
 -- | Ignore output from the previously run command
-discard
+receive_
   :: Ghci s
   -- ^ GHCi session state
   -> IO ()
-discard ghci = do
+receive_ ghci = do
   separator <- readIORef (ghci ^. #separatorIORef)
 
   let stream handle =
