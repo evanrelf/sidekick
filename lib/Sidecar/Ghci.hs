@@ -7,6 +7,7 @@ module Sidecar.Ghci
   -- * Operations
   , run
   , run_
+  , cancel
   )
 where
 

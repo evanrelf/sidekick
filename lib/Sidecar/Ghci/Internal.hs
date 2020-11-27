@@ -18,6 +18,7 @@ module Sidecar.Ghci.Internal
   -- state for the next command.
   , run
   , run_
+  , cancel
   -- * Low-level operations
   -- | Low-level primitives for more direct manipulation of the GHCi session,
   -- providing no checks or guarantees that you maintain a good state.
@@ -43,11 +44,13 @@ import qualified System.Random as Random
 -- | GHCi session state
 data Ghci s = Ghci
   { stdinHandle :: Handle
-  -- ^ Handle for GHCi process' @stdin@ stream
+  -- ^ Handle for GHCi session's @stdin@ stream
   , stdoutHandle :: Handle
-  -- ^ Handle for GHCi process' @stderr@ stream
+  -- ^ Handle for GHCi session's @stderr@ stream
   , stderrHandle :: Handle
-  -- ^ Handle for GHCi process' @stdin@ stream
+  -- ^ Handle for GHCi session's @stdin@ stream
+  , processHandle :: Process.ProcessHandle
+  -- ^ Process handle for GHCi session
   , commandIORef :: IORef Text
   -- ^ Mutable reference to last executed command
   , separatorIORef :: IORef Text
@@ -89,7 +92,7 @@ withGhci command action = liftIO do
     -> Maybe Handle
     -> Process.ProcessHandle
     -> IO a
-  setup maybeStdinHandle maybeStdoutHandle maybeStderrHandle _processHandle =
+  setup maybeStdinHandle maybeStdoutHandle maybeStderrHandle processHandle =
     case (maybeStdinHandle, maybeStdoutHandle, maybeStderrHandle) of
       (Just stdinHandle, Just stdoutHandle, Just stderrHandle) -> do
         IO.hSetBuffering stdinHandle IO.LineBuffering
@@ -103,6 +106,7 @@ withGhci command action = liftIO do
               { stdinHandle
               , stdoutHandle
               , stderrHandle
+              , processHandle
               , commandIORef
               , separatorIORef
               }
@@ -144,6 +148,16 @@ run_
 run_ ghci command = do
   send ghci command
   discard ghci
+
+
+-- | Send Ctrl-C (@SIGINT@) to GHCi session. Useful for interrupting
+-- long-running commands.
+cancel
+  :: Ghci s
+  -- ^ GHCi session handle
+  -> IO ()
+cancel ghci =
+  Process.interruptProcessGroupOf (ghci ^. #processHandle)
 
 
 -- | Run a command in GHCi
