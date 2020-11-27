@@ -121,6 +121,12 @@ withGhci command action = liftIO do
         -- separator
         run_ ghci "import qualified System.IO as SIDEKICK"
 
+        -- Enable color
+        run_ ghci ":set -fdiagnostics-color=always"
+
+        -- Disable settings that produce ugly output
+        run_ ghci ":unset +t +s"
+
         action ghci
 
       _ ->
