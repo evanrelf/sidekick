@@ -27,8 +27,8 @@ import qualified Text.Megaparsec as Megaparsec
 import qualified Text.Megaparsec.Char as Megaparsec
 
 
--- | Return GHCi session's current working directory, parsed from @:show paths@
--- command
+-- | Return GHCi session's current working directory, parsed from the
+-- @:show paths@ command
 getCwd
   :: Ghci s
   -- ^ GHCi session handle
@@ -40,7 +40,7 @@ getCwd ghci = do
   undefined
 
 
--- | Return currently loaded modules, parsed from @:show modules@ command
+-- | Return currently loaded modules, parsed from the @:show modules@ command
 getModules
   :: Ghci s
   -- ^ GHCi session handle

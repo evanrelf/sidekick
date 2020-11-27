@@ -25,6 +25,8 @@ module Sidekick.Ghci.Internal
   , send
   , receive
   , discard
+  -- * Debugging
+  , interact
   )
 where
 
@@ -163,6 +165,7 @@ cancel ghci =
 -- | Run a command in GHCi
 send
   :: Ghci s
+  -- ^ GHCi session state
   -> Text
   -- ^ GHCi command or Haskell expression
   -> IO ()
@@ -220,3 +223,23 @@ discard ghci = do
   Async.concurrently_
     do stream (ghci ^. #stdoutHandle)
     do stream (ghci ^. #stderrHandle)
+
+
+-- | Interact with the GHCi session directly via @stdin@ and @stdout@. Useful
+-- for debugging and experimenting.
+--
+-- >>> withGhci "ghci" interact
+-- 1 + 1
+-- 2
+interact
+  :: Ghci s
+  -- ^ GHCi session state
+  -> IO ()
+interact ghci = do
+  Streamly.repeatM getLine
+    & Streamly.mapM (run ghci)
+    & Streamly.trace (\(out, err) -> do
+        unless (Text.null err) $ Text.IO.hPutStrLn stderr err
+        unless (Text.null out) $ putTextLn out
+      )
+    & Streamly.drain
