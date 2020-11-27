@@ -1,5 +1,6 @@
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeApplications #-}
@@ -19,7 +20,7 @@ import qualified System.Process as Process
 import qualified System.Random as Random
 
 
-data Ghci = Ghci
+data Ghci s = Ghci
   { stdinHandle :: Handle
   , stdoutHandle :: Handle
   , stderrHandle :: Handle
@@ -32,7 +33,7 @@ data Ghci = Ghci
 Optics.TH.makeFieldLabelsWith Optics.TH.noPrefixFieldLabels ''Ghci
 
 
-withGhci :: forall m a. MonadIO m => Text -> (Ghci -> IO a) -> m a
+withGhci :: forall m a. MonadIO m => Text -> (forall s. Ghci s -> IO a) -> m a
 withGhci command action = liftIO do
   Process.withCreateProcess processConfig setup
 
@@ -81,19 +82,19 @@ withGhci command action = liftIO do
         fail "Failed to create GHCi handles"
 
 
-run :: Ghci -> Text -> IO ()
+run :: Ghci s -> Text -> IO ()
 run ghci command = do
   send ghci command
   ignore ghci
 
 
-query :: Ghci -> Text -> IO (Text, Text)
+query :: Ghci s -> Text -> IO (Text, Text)
 query ghci command = do
   send ghci command
   receive ghci
 
 
-send :: Ghci -> Text -> IO ()
+send :: Ghci s -> Text -> IO ()
 send ghci command = do
   random <- Random.randomRIO @Int (0, 1_000_000)
   let separator = [i|__sidecar__#{random}__|]
@@ -108,7 +109,7 @@ send ghci command = do
     [i|SIDECAR.hPutStrLn SIDECAR.stderr "\\n#{separator}"|]
 
 
-receive :: Ghci -> IO (Text, Text)
+receive :: Ghci s -> IO (Text, Text)
 receive ghci = do
   separator <- readIORef (ghci ^. #separatorIORef)
   command <- readIORef (ghci ^. #commandIORef)
@@ -127,7 +128,7 @@ receive ghci = do
     do stream (ghci ^. #stderrHandle)
 
 
-ignore :: Ghci -> IO ()
+ignore :: Ghci s -> IO ()
 ignore ghci = do
   separator <- readIORef (ghci ^. #separatorIORef)
 
