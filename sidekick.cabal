@@ -86,6 +86,7 @@ library
   hs-source-dirs: lib
   build-depends:
     , async
+    , brick
     , megaparsec
     , optics
     , process
@@ -93,10 +94,12 @@ library
     , streamly
     , string-interpolate
     , text
+    , vty
   exposed-modules:
     , Sidekick
     , Sidekick.Ghci
     , Sidekick.Ghci.Internal
+    , Sidekick.UI
 
 
 executable sidekick
