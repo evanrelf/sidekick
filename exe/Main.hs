@@ -1,7 +1,7 @@
 module Main (main) where
 
-import qualified Sidecar
+import qualified Sidekick
 
 
 main :: IO ()
-main = Sidecar.main
+main = Sidekick.main

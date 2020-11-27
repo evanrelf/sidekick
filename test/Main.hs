@@ -6,7 +6,7 @@ import Data.String.Interpolate (i)
 
 import qualified Control.Concurrent as Concurrent
 import qualified Control.Concurrent.Async as Async
-import qualified Sidecar.Ghci as Ghci
+import qualified Sidekick.Ghci as Ghci
 import qualified Test.Hspec as Hspec
 import qualified System.Timeout as Timeout
 

@@ -1,6 +1,6 @@
 -- | Interact with a live GHCi session
 
-module Sidecar.Ghci
+module Sidekick.Ghci
   (
   -- * Start GHCi session
     withGhci
@@ -15,7 +15,7 @@ module Sidecar.Ghci
   )
 where
 
-import Sidecar.Ghci.Internal
+import Sidekick.Ghci.Internal
   ( Ghci
   , withGhci
   , run

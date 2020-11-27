@@ -7,7 +7,7 @@
 
 -- | Interact with a live GHCi session
 
-module Sidecar.Ghci.Internal
+module Sidekick.Ghci.Internal
   (
     Ghci (..)
   -- * Start GHCi session
@@ -117,7 +117,7 @@ withGhci command action = liftIO do
 
         -- Import 'System.IO' for 'hPutStrLn' and friends, and print initial
         -- separator
-        run_ ghci "import qualified System.IO as SIDECAR"
+        run_ ghci "import qualified System.IO as SIDEKICK"
 
         action ghci
 
@@ -168,16 +168,16 @@ send
   -> IO ()
 send ghci command = do
   random <- Random.randomRIO @Int (0, 1_000_000)
-  let separator = [i|__sidecar__#{random}__|]
+  let separator = [i|__sidekick__#{random}__|]
 
   atomicWriteIORef (ghci ^. #separatorIORef) separator
   atomicWriteIORef (ghci ^. #commandIORef) command
 
   Text.IO.hPutStrLn (ghci ^. #stdinHandle) command
   Text.IO.hPutStrLn (ghci ^. #stdinHandle)
-    [i|SIDECAR.hPutStrLn SIDECAR.stdout "\\n#{separator}"|]
+    [i|SIDEKICK.hPutStrLn SIDEKICK.stdout "\\n#{separator}"|]
   Text.IO.hPutStrLn (ghci ^. #stdinHandle)
-    [i|SIDECAR.hPutStrLn SIDECAR.stderr "\\n#{separator}"|]
+    [i|SIDEKICK.hPutStrLn SIDEKICK.stderr "\\n#{separator}"|]
 
 
 -- | Collect output from the previously run command

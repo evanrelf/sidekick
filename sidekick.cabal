@@ -1,12 +1,12 @@
 cabal-version: 3.0
 
-name:        sidecar
+name:        sidekick
 version:     0.0.0.0
 -- synopsis:
 -- description:
 author:      Evan Relf <evan@evanrelf.com>
 maintainer:  Evan Relf <evan@evanrelf.com>
-homepage:    https://github.com/evanrelf/sidecar
+homepage:    https://github.com/evanrelf/sidekick
 license:     ISC
 copyright:   2020 Evan Relf
 
@@ -94,12 +94,12 @@ library
     , string-interpolate
     , text
   exposed-modules:
-    , Sidecar
-    , Sidecar.Ghci
-    , Sidecar.Ghci.Internal
+    , Sidekick
+    , Sidekick.Ghci
+    , Sidekick.Ghci.Internal
 
 
-executable sidecar
+executable sidekick
   import:
     , common
     , threaded
@@ -107,7 +107,7 @@ executable sidecar
   main-is: Main.hs
   hs-source-dirs: exe
   build-depends:
-    , sidecar
+    , sidekick
 
 
 test-suite test
@@ -121,5 +121,5 @@ test-suite test
   build-depends:
     , async
     , hspec
-    , sidecar
+    , sidekick
     , string-interpolate

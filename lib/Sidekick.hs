@@ -1,4 +1,4 @@
-module Sidecar (main) where
+module Sidekick (main) where
 
 
 main :: IO ()

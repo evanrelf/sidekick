@@ -1,1 +1,1 @@
-# sidecar
+# sidekick

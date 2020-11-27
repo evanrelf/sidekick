@@ -2,7 +2,7 @@ let
   haskellPackagesOverlay =
     import ./nix/override-haskell-packages.nix {
       packages = {
-        "sidecar" = pkgs.nix-gitignore.gitignoreSource [ ./.nixignore ] ./.;
+        "sidekick" = pkgs.nix-gitignore.gitignoreSource [ ./.nixignore ] ./.;
         "optics" = "0.3";
         "optics-core" = "0.3.0.1";
         "optics-extra" = "0.3";
@@ -23,14 +23,14 @@ let
   pkgs = import ./nix/nixpkgs.nix { overlays = [ haskellPackagesOverlay ]; };
 
 
-  sidecar = pkgs.haskellPackages.sidecar;
+  sidekick = pkgs.haskellPackages.sidekick;
 
 
-  executable = pkgs.haskell.lib.justStaticExecutables sidecar;
+  executable = pkgs.haskell.lib.justStaticExecutables sidekick;
 
 
   shell =
-    sidecar.env.overrideAttrs (old: {
+    sidekick.env.overrideAttrs (old: {
       buildInputs = with pkgs; old.buildInputs ++ [
         cabal-install
         ghcid
@@ -40,7 +40,7 @@ let
 
 in
   { inherit
-      sidecar
+      sidekick
       executable
       shell
     ;
