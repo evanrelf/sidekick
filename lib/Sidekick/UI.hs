@@ -2,9 +2,10 @@
 
 module Sidekick.UI (main) where
 
-import Optics ((^.))
+import Optics ((.~), (^.))
 
 import qualified Brick
+import qualified Brick.BChan as Brick
 import qualified Graphics.Vty as Vty
 import qualified Optics.TH
 
@@ -17,15 +18,26 @@ data State = State
 Optics.TH.makeFieldLabelsWith Optics.TH.noPrefixFieldLabels ''State
 
 
-data Event = Event
+data Event
+  = NewText Text
 
 
 type Name = ()
 
 
-main :: IO ()
-main = do
-  _finalState <- Brick.defaultMain application initialState
+main :: Brick.BChan Event -> IO ()
+main eventChannel = do
+  let buildVtyHandle = Vty.mkVty Vty.defaultConfig
+  vtyHandle <- buildVtyHandle
+
+  _finalState <-
+    Brick.customMain
+      vtyHandle
+      buildVtyHandle
+      (Just eventChannel)
+      application
+      initialState
+
   pass
 
 
@@ -58,19 +70,28 @@ chooseCursor
 chooseCursor state cursorLocations = Nothing
 
 
-handleEvent :: State -> Brick.BrickEvent n e -> Brick.EventM n (Brick.Next State)
+handleEvent
+  :: State
+  -> Brick.BrickEvent n Event
+  -> Brick.EventM n (Brick.Next State)
 handleEvent state = \case
   Brick.VtyEvent vtyEvent ->
     handleVtyEvent state vtyEvent
 
   Brick.AppEvent appEvent ->
-    Brick.continue state
+    handleAppEvent state appEvent
 
   Brick.MouseDown name button modifiers location ->
     Brick.continue state
 
   Brick.MouseUp name maybeButton location ->
     Brick.continue state
+
+
+handleAppEvent :: State -> Event -> Brick.EventM n (Brick.Next State)
+handleAppEvent state = \case
+  NewText text ->
+    Brick.continue (state & #text .~ text)
 
 
 handleVtyEvent :: State -> Vty.Event -> Brick.EventM n (Brick.Next State)
