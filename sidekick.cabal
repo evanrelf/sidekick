@@ -81,49 +81,6 @@ common splint
 
 
 --------------------------------------------------------------------------------
--- sidekick-ghci
---------------------------------------------------------------------------------
-
-
-library sidekick-ghci
-  import:
-    , common
-    , optics-labels
-    , splint
-    , streamly-optimizations
-  visibility: public
-  hs-source-dirs: sidekick-ghci
-  build-depends:
-    , async
-    , megaparsec
-    , optics
-    , process
-    , random
-    , streamly
-    , string-interpolate
-    , text
-  exposed-modules:
-    , Sidekick.Ghci
-    , Sidekick.Ghci.Internal
-
-
-test-suite test-sidekick-ghci
-  import:
-    , common
-    , splint
-    , streamly-optimizations
-    , threaded-executable
-  type: exitcode-stdio-1.0
-  main-is: Main.hs
-  hs-source-dirs: test-sidekick-ghci
-  build-depends:
-    , async
-    , hspec
-    , sidekick-ghci
-    , string-interpolate
-
-
---------------------------------------------------------------------------------
 -- sidekick
 --------------------------------------------------------------------------------
 
@@ -171,3 +128,46 @@ test-suite test-sidekick
   build-depends:
     , hspec
     , sidekick
+
+
+--------------------------------------------------------------------------------
+-- sidekick-ghci
+--------------------------------------------------------------------------------
+
+
+library sidekick-ghci
+  import:
+    , common
+    , optics-labels
+    , splint
+    , streamly-optimizations
+  visibility: public
+  hs-source-dirs: sidekick-ghci
+  build-depends:
+    , async
+    , megaparsec
+    , optics
+    , process
+    , random
+    , streamly
+    , string-interpolate
+    , text
+  exposed-modules:
+    , Sidekick.Ghci
+    , Sidekick.Ghci.Internal
+
+
+test-suite test-sidekick-ghci
+  import:
+    , common
+    , splint
+    , streamly-optimizations
+    , threaded-executable
+  type: exitcode-stdio-1.0
+  main-is: Main.hs
+  hs-source-dirs: test-sidekick-ghci
+  build-depends:
+    , async
+    , hspec
+    , sidekick-ghci
+    , string-interpolate
