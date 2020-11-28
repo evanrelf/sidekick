@@ -102,10 +102,10 @@ library
     , streamly-fsnotify
     , vty
   exposed-modules:
-    Sidekick
-    Sidekick.FSNotify
-    Sidekick.Options
-    Sidekick.UI
+    , Sidekick
+    , Sidekick.FSNotify
+    , Sidekick.Options
+    , Sidekick.UI
 
 
 executable sidekick
