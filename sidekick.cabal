@@ -87,17 +87,20 @@ library
   build-depends:
     , async
     , brick
+    , fsnotify
     , megaparsec
     , optics
     , optparse-applicative
     , process
     , random
     , streamly
+    , streamly-fsnotify
     , string-interpolate
     , text
     , vty
   exposed-modules:
     , Sidekick
+    , Sidekick.FSNotify
     , Sidekick.Ghci
     , Sidekick.Ghci.Internal
     , Sidekick.Options
