@@ -29,6 +29,7 @@ tests =
 
 running :: Text -> Hspec.SpecWith ()
 running ghciCommand = do
+  {- HLINT ignore "Avoid lambda using `infix`" -}
   let run command = Ghci.withGhci ghciCommand \ghci -> Ghci.run ghci command
 
   Hspec.it "evaluates expressions" do

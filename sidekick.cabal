@@ -11,13 +11,18 @@ license:     ISC
 copyright:   2020 Evan Relf
 
 
+--------------------------------------------------------------------------------
+-- Common
+--------------------------------------------------------------------------------
+
+
 common common
   build-depends:
     , base
     , relude
   mixins:
     , base hiding (Prelude)
-    , relude (Relude as Prelude, Relude.Monad)
+    , relude (Relude as Prelude)
   default-language: Haskell2010
   default-extensions:
     , BlockArguments
@@ -44,15 +49,14 @@ common common
     -fshow-warning-groups
 
 
-common threaded
+common threaded-executable
   ghc-options:
     -threaded
     -rtsopts
     -with-rtsopts=-N
 
 
-common optics
-  build-depends: optics
+common optics-labels
   default-extensions:
     , DataKinds
     , DuplicateRecordFields
@@ -63,8 +67,7 @@ common optics
     , UndecidableInstances
 
 
-common streamly
-  build-depends: streamly
+common streamly-optimizations
   ghc-options:
     -O2
     -fdicts-strict
@@ -77,57 +80,94 @@ common splint
   ghc-options: -fplugin=Splint
 
 
-library
+--------------------------------------------------------------------------------
+-- sidekick-ghci
+--------------------------------------------------------------------------------
+
+
+library sidekick-ghci
   import:
     , common
-    , optics
-    , streamly
+    , optics-labels
     , splint
-  hs-source-dirs: lib
+    , streamly-optimizations
+  visibility: public
+  hs-source-dirs: sidekick-ghci
   build-depends:
     , async
-    , brick
-    , fsnotify
     , megaparsec
     , optics
-    , optparse-applicative
     , process
     , random
     , streamly
-    , streamly-fsnotify
     , string-interpolate
     , text
-    , vty
   exposed-modules:
-    , Sidekick
-    , Sidekick.FSNotify
     , Sidekick.Ghci
     , Sidekick.Ghci.Internal
-    , Sidekick.Options
-    , Sidekick.UI
+
+
+test-suite test-sidekick-ghci
+  import:
+    , common
+    , splint
+    , streamly-optimizations
+    , threaded-executable
+  type: exitcode-stdio-1.0
+  main-is: Main.hs
+  hs-source-dirs: test-sidekick-ghci
+  build-depends:
+    , async
+    , hspec
+    , sidekick-ghci
+    , string-interpolate
+
+
+--------------------------------------------------------------------------------
+-- sidekick
+--------------------------------------------------------------------------------
+
+
+library
+  import:
+    , common
+    , optics-labels
+    , splint
+    , streamly-optimizations
+  hs-source-dirs: sidekick
+  build-depends:
+    , async
+    , brick
+    , optics
+    , optparse-applicative
+    , sidekick-ghci
+    , streamly
+    , streamly-fsnotify
+    , vty
+  exposed-modules:
+    Sidekick
+    Sidekick.FSNotify
+    Sidekick.Options
+    Sidekick.UI
 
 
 executable sidekick
   import:
     , common
-    , threaded
-    , streamly
-  main-is: Main.hs
-  hs-source-dirs: exe
-  build-depends:
-    , sidekick
+    , streamly-optimizations
+    , threaded-executable
+  build-depends: sidekick
+  main-is: sidekick/Main.hs
 
 
-test-suite test
+test-suite test-sidekick
   import:
     , common
-    , threaded
-    , streamly
+    , splint
+    , threaded-executable
   type: exitcode-stdio-1.0
   main-is: Main.hs
-  hs-source-dirs: test
+  hs-source-dirs: test-sidekick
   build-depends:
-    , async
     , hspec
     , sidekick
-    , string-interpolate
