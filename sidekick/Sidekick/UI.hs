@@ -14,7 +14,7 @@ import qualified Graphics.Vty as Vty
 import qualified Optics.TH
 
 
-data State = State
+newtype State = State
   { text :: Text
   }
 
@@ -22,7 +22,7 @@ data State = State
 Optics.TH.makeFieldLabelsWith Optics.TH.noPrefixFieldLabels ''State
 
 
-data Event
+newtype Event
   = NewText Text
 
 
@@ -71,7 +71,7 @@ chooseCursor
   :: State
   -> [Brick.CursorLocation n]
   -> Maybe (Brick.CursorLocation n)
-chooseCursor state cursorLocations = Nothing
+chooseCursor _state _cursorLocations = Nothing
 
 
 handleEvent
@@ -85,17 +85,17 @@ handleEvent state = \case
   Brick.AppEvent appEvent ->
     handleAppEvent state appEvent
 
-  Brick.MouseDown name button modifiers location ->
+  Brick.MouseDown _name _button _modifiers _location ->
     Brick.continue state
 
-  Brick.MouseUp name maybeButton location ->
+  Brick.MouseUp _name _maybeButton _location ->
     Brick.continue state
 
 
 handleAppEvent :: State -> Event -> Brick.EventM n (Brick.Next State)
 handleAppEvent state = \case
-  NewText text ->
-    Brick.continue (state & #text .~ text)
+  NewText newText ->
+    Brick.continue (state & #text .~ newText)
 
 
 handleVtyEvent :: State -> Vty.Event -> Brick.EventM n (Brick.Next State)
@@ -104,19 +104,19 @@ handleVtyEvent state = \case
   Vty.EvKey key [] | key `elem` [Vty.KEsc, Vty.KChar 'q'] ->
     Brick.halt state
 
-  Vty.EvKey key modifiers ->
+  Vty.EvKey _key _modifiers ->
     Brick.continue state
 
-  Vty.EvMouseDown column row button modifiers ->
+  Vty.EvMouseDown _column _row _button _modifiers ->
     Brick.continue state
 
-  Vty.EvMouseUp column row maybeButton ->
+  Vty.EvMouseUp _column _row _maybeButton ->
     Brick.continue state
 
-  Vty.EvResize width height ->
+  Vty.EvResize _width _height ->
     Brick.continue state
 
-  Vty.EvPaste bytes ->
+  Vty.EvPaste _bytes ->
     Brick.continue state
 
   Vty.EvLostFocus ->
@@ -127,8 +127,8 @@ handleVtyEvent state = \case
 
 
 startEvent :: State -> Brick.EventM n State
-startEvent state = pure state
+startEvent = pure
 
 
 attrMap :: State -> Brick.AttrMap
-attrMap state = Brick.attrMap Vty.defAttr []
+attrMap _state = Brick.attrMap Vty.defAttr []

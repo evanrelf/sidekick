@@ -56,10 +56,11 @@ startGhci :: Env -> IO ()
 startGhci env = do
   let command = env ^. #options % #command & fromMaybe "cabal repl"
 
-  Ghci.withGhci command \ghci -> do
-    undefined
+  Ghci.withGhci command \_ghci -> do
+    -- TODO
+    pass
 
 
 startFSNotify :: Env -> IO ()
-startFSNotify env = do
-  FSNotify.start undefined
+startFSNotify _env = do
+  FSNotify.start "TODO"

@@ -12,7 +12,7 @@ import qualified Optics.TH
 import qualified Options.Applicative as Options
 
 
-data Options = Options
+newtype Options = Options
   { command :: Maybe Text
   }
 
