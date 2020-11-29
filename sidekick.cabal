@@ -187,7 +187,7 @@ library fused-effects-pub-sub
     , unagi-chan
   exposed-modules:
     , Control.Carrier.Pub.Unagi
-    , Control.Carrier.Sub
+    , Control.Carrier.Sub.Unagi
     , Control.Effect.Pub
     , Control.Effect.Sub
   default-language: Haskell2010
