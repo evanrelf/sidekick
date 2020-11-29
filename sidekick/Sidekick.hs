@@ -1,13 +1,15 @@
-{-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE OverloadedLists #-}
 
 module Sidekick (main) where
 
+import Control.Algebra (Has)
+import Control.Carrier.Lift (Lift, runM)
+import Control.Carrier.Sub.Unagi (Sub, runSub)
 import Optics ((%), (^.))
 import Sidekick.Options (Options)
 
-import qualified Brick.BChan as Brick
 import qualified Control.Concurrent.Async as Async
+import qualified Control.Concurrent.Chan.Unagi as Unagi
 import qualified Optics.TH
 import qualified Sidekick.FSNotify as FSNotify
 import qualified Sidekick.Ghci as Ghci
@@ -15,52 +17,50 @@ import qualified Sidekick.Options as Options
 import qualified Sidekick.UI as UI
 
 
-data Env = Env
-  { options :: Options
-  , uiEventChannel :: Brick.BChan UI.Event
-  }
-
-
-Optics.TH.makeFieldLabelsWith Optics.TH.noPrefixFieldLabels ''Env
-
-
 main :: IO ()
 main = do
   options <- Options.getOptions
 
-  uiEventChannel <- Brick.newBChan 10
+  (uiInChan, uiOutChan) <- Unagi.newChan
+  (ghciInChan, ghciOutChan) <- Unagi.newChan
+  (fsnotifyInChan, fsnotifyOutChan) <- Unagi.newChan
 
-  let env = Env{options, uiEventChannel}
-
-  start env
-
-
-start :: Env -> IO ()
-start env =
-  Async.withAsync (startUI env) \uiThread ->
-  Async.withAsync (startGhci env) \ghciThread ->
-  Async.withAsync (startFSNotify env) \fsnotifyThread ->
-  void $ Async.waitAny
-    [ uiThread
-    , ghciThread
-    , fsnotifyThread
+  racing
+    [ startUI
+    , startGhci
+    , startFSNotify
     ]
 
 
-startUI :: Env -> IO ()
-startUI env = do
-  UI.start (env ^. #uiEventChannel)
+racing :: NonEmpty (IO a) -> IO a
+racing = go [] . toList
+  where
+  go threads [] =
+    snd <$> Async.waitAny threads
+  go threads (action : actions) =
+    Async.withAsync action \thread -> go (thread : threads) actions
 
 
-startGhci :: Env -> IO ()
-startGhci env = do
-  let command = env ^. #options % #command & fromMaybe "cabal repl"
+racing_ :: NonEmpty (IO ()) -> IO ()
+racing_ = void . racing
+
+
+startUI :: IO ()
+startUI =
+  UI.start
+    & runSub (undefined :: Unagi.OutChan UI.Event)
+    & runM
+
+
+startGhci :: IO ()
+startGhci = do
+  let command = "cabal repl"
 
   Ghci.withGhci command \_ghci -> do
     -- TODO
     pass
 
 
-startFSNotify :: Env -> IO ()
-startFSNotify _env = do
+startFSNotify :: IO ()
+startFSNotify = do
   FSNotify.start "TODO"

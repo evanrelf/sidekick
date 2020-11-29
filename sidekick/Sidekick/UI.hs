@@ -1,3 +1,4 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Sidekick.UI
@@ -6,10 +7,14 @@ module Sidekick.UI
   )
 where
 
+import Control.Algebra (Has)
+import Control.Carrier.Lift (Lift, liftWith, sendIO)
+import Control.Carrier.Sub.Unagi (Sub, sub)
 import Optics ((.~), (^.))
 
 import qualified Brick
 import qualified Brick.BChan as Brick
+import qualified Control.Concurrent.Async as Async
 import qualified Graphics.Vty as Vty
 import qualified Optics.TH
 
@@ -29,20 +34,50 @@ newtype Event
 type Name = ()
 
 
-start :: Brick.BChan Event -> IO ()
-start eventChannel = do
+unagiToBChan
+  :: Has (Lift IO) sig m
+  => Has (Sub msg) sig m
+  => Brick.BChan msg
+  -> m ()
+unagiToBChan bChan = forever do
+  msg <- sub
+  sendIO $ Brick.writeBChan bChan msg
+
+
+-- Warning: Do not use this with stateful effects!
+--
+-- Any threads that do not return (either because they lose the race, or they
+-- fail to finish due to an exception) will have their functorial state
+-- discarded.
+race_ :: Has (Lift IO) sig m => m a -> m b -> m ()
+race_ action1 action2 =
+  liftWith \hdl ctx -> either id id <$>
+    Async.race
+      do void <$> hdl (action1 <$ ctx)
+      do void <$> hdl (action2 <$ ctx)
+
+
+start
+  :: Has (Lift IO) sig m
+  => Has (Sub Event) sig m
+  => m ()
+start = do
   let buildVtyHandle = Vty.mkVty Vty.defaultConfig
-  vtyHandle <- buildVtyHandle
+  vtyHandle <- sendIO buildVtyHandle
 
-  _finalState <-
-    Brick.customMain
-      vtyHandle
-      buildVtyHandle
-      (Just eventChannel)
-      application
-      initialState
+  eventChannel <- sendIO $ Brick.newBChan 10
 
-  pass
+  let brick = void $ sendIO $
+        Brick.customMain
+          vtyHandle
+          buildVtyHandle
+          (Just eventChannel)
+          application
+          initialState
+
+  race_
+    do unagiToBChan eventChannel
+    do brick
 
 
 initialState :: State
