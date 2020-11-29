@@ -13,6 +13,11 @@ module Control.Carrier.Pub.Unagi
   , PubC (..)
   -- * Pub effect
   , module Control.Effect.Pub
+  -- * Re-exports
+  , Unagi.InChan
+  , Unagi.OutChan
+  , Unagi.newChan
+  , Unagi.dupChan
   )
 where
 

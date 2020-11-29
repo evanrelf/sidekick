@@ -13,6 +13,11 @@ module Control.Carrier.Sub.Unagi
   , SubC (..)
   -- * Sub effect
   , module Control.Effect.Sub
+  -- * Re-exports
+  , Unagi.InChan
+  , Unagi.OutChan
+  , Unagi.newChan
+  , Unagi.dupChan
   )
 where
 
