@@ -183,9 +183,10 @@ library fused-effects-pub-sub
   build-depends:
     , base
     , fused-effects
+    , transformers
     , unagi-chan
   exposed-modules:
-    , Control.Carrier.Pub
+    , Control.Carrier.Pub.Unagi
     , Control.Carrier.Sub
     , Control.Effect.Pub
     , Control.Effect.Sub

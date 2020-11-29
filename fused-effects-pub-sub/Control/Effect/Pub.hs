@@ -17,9 +17,9 @@ import Control.Algebra (Algebra, Has, run, send)
 import Data.Kind (Type)
 
 
-data Pub a (m :: Type -> Type) k where
-  Pub :: a -> Pub a m ()
+data Pub msg (m :: Type -> Type) k where
+  Pub :: msg -> Pub msg m ()
 
 
-pub :: Has (Pub a) sig m => a -> m ()
-pub x = send (Pub x)
+pub :: Has (Pub msg) sig m => msg -> m ()
+pub msg = send (Pub msg)
