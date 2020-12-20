@@ -1,6 +1,9 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE QuasiQuotes #-}
 
 module Sidekick.FSNotify (start) where
+
+import Data.String.Interpolate (i)
 
 import qualified Streamly
 import qualified Streamly.FSNotify
@@ -27,14 +30,14 @@ start maybeDirectory = do
 
 handleEvent :: MonadIO m => Streamly.FSNotify.Event -> m ()
 handleEvent = \case
-  Streamly.FSNotify.Added path _time Streamly.FSNotify.NotDir -> do
-    putStrLn ("Added " <> show path)
+  Streamly.FSNotify.Added path time Streamly.FSNotify.NotDir -> do
+    putStrLn [i|#{time}: Added #{path}|]
 
-  Streamly.FSNotify.Modified path _time Streamly.FSNotify.NotDir -> do
-    putStrLn ("Modified " <> show path)
+  Streamly.FSNotify.Modified path time Streamly.FSNotify.NotDir -> do
+    putStrLn [i|#{time}: Modified #{path}|]
 
-  Streamly.FSNotify.Removed path _time Streamly.FSNotify.NotDir -> do
-    putStrLn ("Removed " <> show path)
+  Streamly.FSNotify.Removed path time Streamly.FSNotify.NotDir -> do
+    putStrLn [i|#{time}: Removed #{path}|]
 
   _ ->
     pass
