@@ -12,8 +12,9 @@ import qualified Optics.TH
 import qualified Options.Applicative as Options
 
 
-newtype Options = Options
+data Options = Options
   { command :: Maybe Text
+  , directory :: Maybe FilePath
   }
 
 
@@ -38,4 +39,13 @@ parseOptions = do
       , Options.hidden
       ]
 
-  pure Options{command}
+  directory <-
+    Options.optional $ Options.strOption $ mconcat
+      [ Options.long "directory"
+      , Options.short 'd'
+      , Options.metavar "DIRECTORY"
+      , Options.help "Directory where to start GHCi"
+      , Options.hidden
+      ]
+
+  pure Options{command, directory}

@@ -99,8 +99,6 @@ library
   build-depends:
     , async
     , brick
-    , fused-effects
-    , fused-effects-pub-sub
     , optics
     , optparse-applicative
     , sidekick-ghci
