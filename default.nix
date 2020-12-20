@@ -25,26 +25,5 @@ let
 
   pkgs = import ./nix/nixpkgs.nix { overlays = [ haskellPackagesOverlay ]; };
 
-
-  sidekick = pkgs.haskellPackages.sidekick;
-
-
-  executable = pkgs.haskell.lib.justStaticExecutables sidekick;
-
-
-  shell =
-    sidekick.env.overrideAttrs (old: {
-      buildInputs = with pkgs; old.buildInputs ++ [
-        cabal-install
-        ghcid
-        hlint
-      ];
-    });
-
 in
-  { inherit
-      sidekick
-      executable
-      shell
-    ;
-  }
+  pkgs.haskellPackages.sidekick
