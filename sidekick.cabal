@@ -32,9 +32,13 @@ common common
     , DerivingStrategies
     , DerivingVia
     , GeneralizedNewtypeDeriving
+    , InstanceSigs
     , LambdaCase
+    , NamedFieldPuns
     , NumericUnderscores
     , OverloadedStrings
+    , ScopedTypeVariables
+    , TypeApplications
   ghc-options:
     -Wall
     -Wcompat
