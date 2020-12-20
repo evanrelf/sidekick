@@ -1,10 +1,22 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 module Sidekick.FSNotify (start) where
 
+import Control.Algebra (Has)
+import Control.Carrier.Lift (Lift, sendIO)
+import Control.Carrier.Pub.Unagi (Pub, pub)
+
+import qualified Streamly
 import qualified Streamly.FSNotify
 import qualified Streamly.Prelude as Streamly
 
 
-start :: FilePath -> IO ()
+start
+  :: Streamly.MonadAsync m
+  => Has (Lift IO) sig m
+  => Has (Pub FilePath) sig m
+  => FilePath
+  -> m ()
 start directory = do
   -- We only care about filesystem events concerning Haskell files
   let eventPredicate =
@@ -20,16 +32,24 @@ start directory = do
     & Streamly.drain
 
 
-handleEvent :: Streamly.FSNotify.Event -> IO ()
+handleEvent
+  :: MonadIO m
+  => Has (Lift IO) sig m
+  => Has (Pub FilePath) sig m
+  => Streamly.FSNotify.Event
+  -> m ()
 handleEvent = \case
-  Streamly.FSNotify.Added _path _time Streamly.FSNotify.NotDir ->
-    pass
+  Streamly.FSNotify.Added path _time Streamly.FSNotify.NotDir -> do
+    putStrLn ("Added " <> show path)
+    pub path
 
-  Streamly.FSNotify.Modified _path _time Streamly.FSNotify.NotDir ->
-    pass
+  Streamly.FSNotify.Modified path _time Streamly.FSNotify.NotDir -> do
+    putStrLn ("Modified " <> show path)
+    pub path
 
-  Streamly.FSNotify.Removed _path _time Streamly.FSNotify.NotDir ->
-    pass
+  Streamly.FSNotify.Removed path _time Streamly.FSNotify.NotDir -> do
+    putStrLn ("Removed " <> show path)
+    pub path
 
   _ ->
     pass

@@ -2,9 +2,13 @@
 
 module Sidekick (main) where
 
+-- main :: IO ()
+-- main = pass
+
 import Control.Algebra (Has)
 import Control.Carrier.Lift (Lift, runM)
 import Control.Carrier.Sub.Unagi (Sub, runSub)
+import Control.Carrier.Pub.Unagi (Pub, runPub)
 import Optics ((%), (^.))
 import Sidekick.Options (Options)
 
@@ -64,3 +68,5 @@ startGhci = do
 startFSNotify :: IO ()
 startFSNotify = do
   FSNotify.start "TODO"
+    & runPub (undefined :: Unagi.InChan FilePath)
+    & runM
