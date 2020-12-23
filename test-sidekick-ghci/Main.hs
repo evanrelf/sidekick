@@ -4,11 +4,11 @@ module Main (main) where
 
 import Data.String.Interpolate (i)
 
-import qualified Control.Concurrent as Concurrent
-import qualified Control.Concurrent.Async as Async
 import qualified Sidekick.Ghci as Ghci
 import qualified Test.Hspec as Hspec
-import qualified System.Timeout as Timeout
+import qualified UnliftIO.Async as Async
+import qualified UnliftIO.Concurrent as Concurrent
+import qualified UnliftIO.Timeout as Timeout
 
 
 main :: IO ()

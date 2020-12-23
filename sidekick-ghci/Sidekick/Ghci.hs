@@ -23,10 +23,10 @@ import Sidekick.Ghci.Internal
   , cancel
   )
 
-import qualified Control.Exception as Exception
 import qualified Data.Char as Char
 import qualified Text.Megaparsec as Megaparsec
 import qualified Text.Megaparsec.Char as Megaparsec
+import qualified UnliftIO.Exception as Exception
 
 
 -- | Return GHCi session's current working directory, parsed from the

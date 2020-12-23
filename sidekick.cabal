@@ -20,6 +20,7 @@ common common
   build-depends:
     , base
     , relude
+    , unliftio
   mixins:
     , base hiding (Prelude)
     , relude (Relude as Prelude)
@@ -97,7 +98,6 @@ library
     , streamly-optimizations
   hs-source-dirs: sidekick
   build-depends:
-    , async
     , brick
     , optics
     , optparse-applicative
@@ -150,10 +150,8 @@ library sidekick-ghci
   visibility: public
   hs-source-dirs: sidekick-ghci
   build-depends:
-    , async
     , megaparsec
     , optics
-    , process
     , random
     , streamly
     , string-interpolate
@@ -173,7 +171,6 @@ test-suite test-sidekick-ghci
   main-is: Main.hs
   hs-source-dirs: test-sidekick-ghci
   build-depends:
-    , async
     , hspec
     , sidekick-ghci
     , string-interpolate

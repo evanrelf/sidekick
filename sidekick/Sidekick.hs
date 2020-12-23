@@ -4,12 +4,12 @@ module Sidekick (main) where
 
 import Sidekick.Options (Options (..))
 
-import qualified Control.Concurrent.Async as Async
 import qualified Control.Concurrent.Chan.Unagi as Unagi
 import qualified Sidekick.FSNotify as FSNotify
 import qualified Sidekick.Ghci as Ghci
 import qualified Sidekick.Options as Options
 import qualified Sidekick.UI as UI
+import qualified UnliftIO.Async as Async
 
 
 main :: IO ()

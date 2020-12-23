@@ -11,10 +11,10 @@ import Optics ((.~), (^.))
 
 import qualified Brick
 import qualified Brick.BChan as Brick
-import qualified Control.Concurrent.Async as Async
 import qualified Control.Concurrent.Chan.Unagi as Unagi
 import qualified Graphics.Vty as Vty
 import qualified Optics.TH
+import qualified UnliftIO.Async as Async
 
 
 newtype State = State

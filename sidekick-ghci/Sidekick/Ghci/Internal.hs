@@ -33,14 +33,14 @@ where
 import Data.String.Interpolate (i)
 import Optics ((^.))
 
-import qualified Control.Concurrent.Async as Async
 import qualified Data.Text as Text
 import qualified Data.Text.IO as Text.IO
 import qualified Optics.TH
 import qualified Streamly.Prelude as Streamly
-import qualified System.IO as IO
-import qualified System.Process as Process
 import qualified System.Random as Random
+import qualified UnliftIO.Async as Async
+import qualified UnliftIO.IO as IO
+import qualified UnliftIO.Process as Process
 
 
 -- | GHCi session state
