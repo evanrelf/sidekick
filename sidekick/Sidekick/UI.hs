@@ -11,10 +11,8 @@ import Optics ((.~), (^.))
 
 import qualified Brick
 import qualified Brick.BChan as Brick
-import qualified Control.Concurrent.Chan.Unagi as Unagi
 import qualified Graphics.Vty as Vty
 import qualified Optics.TH
-import qualified UnliftIO.Async as Async
 
 
 newtype State = State
@@ -32,30 +30,21 @@ newtype Event
 type Name = ()
 
 
-unagiToBChan :: MonadIO m => Unagi.OutChan msg -> Brick.BChan msg -> m ()
-unagiToBChan outChan bChan = liftIO $ forever do
-  msg <- Unagi.readChan outChan
-  Brick.writeBChan bChan msg
-
-
-start :: MonadIO m => Unagi.OutChan Event -> m ()
-start outChan = liftIO do
+start :: MonadIO m => Brick.BChan Event -> m ()
+start eventChannel = liftIO do
   let buildVtyHandle = Vty.mkVty Vty.defaultConfig
 
   vtyHandle <- buildVtyHandle
 
-  eventChannel <- Brick.newBChan 10
+  _finalState <-
+    Brick.customMain
+      vtyHandle
+      buildVtyHandle
+      (Just eventChannel)
+      application
+      initialState
 
-  Async.race_
-    do
-      unagiToBChan outChan eventChannel
-    do
-      Brick.customMain
-        vtyHandle
-        buildVtyHandle
-        (Just eventChannel)
-        application
-        initialState
+  pass
 
 
 initialState :: State

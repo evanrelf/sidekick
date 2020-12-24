@@ -105,7 +105,6 @@ library
     , streamly
     , streamly-fsnotify
     , string-interpolate
-    , unagi-chan
     , vty
   exposed-modules:
     , Sidekick
