@@ -103,8 +103,9 @@ handleAppEvent state = \case
 handleVtyEvent :: State -> Vty.Event -> Brick.EventM n (Brick.Next State)
 handleVtyEvent state = \case
   -- Quit
-  Vty.EvKey key [] | key `elem` [Vty.KEsc, Vty.KChar 'q'] ->
-    Brick.halt state
+  Vty.EvKey key modifiers
+    | key `elem` [Vty.KEsc, Vty.KChar 'q'] -> Brick.halt state
+    | Vty.MCtrl `elem` modifiers && key == Vty.KChar 'c' -> Brick.halt state
 
   Vty.EvKey _key _modifiers ->
     Brick.continue state

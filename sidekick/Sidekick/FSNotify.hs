@@ -32,17 +32,17 @@ start mvar maybeDirectory = do
 handleEvent :: MonadIO m => MVar () -> Streamly.FSNotify.Event -> m ()
 handleEvent mvar = \case
   Streamly.FSNotify.Added path time Streamly.FSNotify.NotDir -> do
-    putStrLn [i|#{time}: Added #{path}|]
+    -- putStrLn [i|#{time}: Added #{path}|]
     _ <- MVar.tryPutMVar mvar ()
     pass
 
   Streamly.FSNotify.Modified path time Streamly.FSNotify.NotDir -> do
-    putStrLn [i|#{time}: Modified #{path}|]
+    -- putStrLn [i|#{time}: Modified #{path}|]
     _ <- MVar.tryPutMVar mvar ()
     pass
 
   Streamly.FSNotify.Removed path time Streamly.FSNotify.NotDir -> do
-    putStrLn [i|#{time}: Removed #{path}|]
+    -- putStrLn [i|#{time}: Removed #{path}|]
     _ <- MVar.tryPutMVar mvar ()
     pass
 

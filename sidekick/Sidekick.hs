@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedLists #-}
+
 module Sidekick (main) where
 
 import Sidekick.Options (Options (..))
@@ -19,26 +21,28 @@ main = do
   mvar <- MVar.newMVar ()
   uiChan <- Brick.newBChan 10
 
-  Async.withAsync (FSNotify.start mvar directory) \_fsnotifyThread ->
-    Async.withAsync (UI.start uiChan) \_uiThread -> do
-      -- Ghci.withGhci (fromMaybe "cabal repl" command) \ghci -> do
-        Concurrent.threadDelay 1_000_000
+  let startGhci = do
+        Ghci.withGhci (fromMaybe "cabal repl" command) \ghci -> do
+          forever do
+            _ <- MVar.takeMVar mvar
+            (out, err) <- Ghci.run ghci ":reload"
+            Brick.writeBChan uiChan (UI.NewText err)
 
-        forever do
-          _ <- MVar.takeMVar mvar
-          -- (out, _err) <- Ghci.run ghci ":reload"
-          let out = "testing"
-          Brick.writeBChan uiChan (UI.NewText out)
-
-
--- racing :: NonEmpty (IO a) -> IO a
--- racing = go [] . toList
---   where
---   go threads [] =
---     snd <$> Async.waitAny threads
---   go threads (action : actions) =
---     Async.withAsync action \thread -> go (thread : threads) actions
+  racing_
+    [ FSNotify.start mvar directory
+    , UI.start uiChan
+    , startGhci
+    ]
 
 
--- racing_ :: NonEmpty (IO a) -> IO ()
--- racing_ = void . racing
+racing :: NonEmpty (IO a) -> IO a
+racing = go [] . toList
+  where
+  go threads [] =
+    snd <$> Async.waitAny threads
+  go threads (action : actions) =
+    Async.withAsync action \thread -> go (thread : threads) actions
+
+
+racing_ :: NonEmpty (IO a) -> IO ()
+racing_ = void . racing
