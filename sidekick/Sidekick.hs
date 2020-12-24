@@ -23,10 +23,12 @@ main = do
 
   let startGhci = do
         Ghci.withGhci (fromMaybe "cabal repl" command) \ghci -> do
+          -- Ghci.run_ ghci ":set -ddump-json"
+
           forever do
             _ <- MVar.takeMVar mvar
             (out, err) <- Ghci.run ghci ":reload"
-            Brick.writeBChan uiChan (UI.NewText err)
+            Brick.writeBChan uiChan (UI.NewText (out, err))
 
   racing_
     [ FSNotify.start mvar directory

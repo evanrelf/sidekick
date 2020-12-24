@@ -10,13 +10,16 @@ where
 import Optics ((.~), (^.))
 
 import qualified Brick
+import qualified Brick.Widgets.Border as Brick
+import qualified Brick.Widgets.Border.Style as Brick
 import qualified Brick.BChan as Brick
 import qualified Graphics.Vty as Vty
 import qualified Optics.TH
 
 
-newtype State = State
-  { text :: Text
+data State = State
+  { out :: Text
+  , err :: Text
   }
 
 
@@ -24,7 +27,7 @@ Optics.TH.makeFieldLabelsWith Optics.TH.noPrefixFieldLabels ''State
 
 
 newtype Event
-  = NewText Text
+  = NewText (Text, Text)
 
 
 type Name = ()
@@ -49,7 +52,8 @@ start eventChannel = liftIO do
 
 initialState :: State
 initialState = State
-  { text = "Loading..."
+  { out = "Loading stdout..."
+  , err = "Loading stderr..."
   }
 
 
@@ -64,9 +68,22 @@ application = Brick.App
 
 
 draw :: State -> [Brick.Widget n]
-draw state =
-  [ Brick.txt (state ^. #text)
-  ]
+draw state = one do
+  Brick.vBox
+    [ Brick.txt ("OUT: " <> (state ^. #out))
+        & Brick.vLimitPercent 50
+        & Brick.padBottom Brick.Max
+        & Brick.padRight Brick.Max
+        -- & Brick.borderWithLabel (Brick.txt "stdout")
+        -- & Brick.withBorderStyle (Brick.borderStyleFromChar ' ')
+
+    , Brick.txt ("ERR: " <> (state ^. #err))
+        & Brick.vLimitPercent 50
+        & Brick.padBottom Brick.Max
+        & Brick.padRight Brick.Max
+        -- & Brick.borderWithLabel (Brick.txt "stderr")
+        -- & Brick.withBorderStyle (Brick.borderStyleFromChar ' ')
+    ]
 
 
 chooseCursor
@@ -96,8 +113,10 @@ handleEvent state = \case
 
 handleAppEvent :: State -> Event -> Brick.EventM n (Brick.Next State)
 handleAppEvent state = \case
-  NewText newText ->
-    Brick.continue (state & #text .~ newText)
+  NewText (out, err) ->
+    Brick.continue do
+      state & #out .~ out
+            & #err .~ err
 
 
 handleVtyEvent :: State -> Vty.Event -> Brick.EventM n (Brick.Next State)
