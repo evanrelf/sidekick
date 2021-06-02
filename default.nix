@@ -3,14 +3,10 @@ let
     import ./nix/override-haskell-packages.nix {
       packages = {
         "sidekick" = pkgs.nix-gitignore.gitignoreSource [ ./.nixignore ] ./.;
-        "optics" = "0.3";
-        "optics-core" = "0.3.0.1";
-        "optics-extra" = "0.3";
-        "optics-th" = "0.3.0.2";
       };
       hackage = {
-        rev = "52415450270fb5d146097c36e74d1117ba0e4fe4";
-        sha256 = "0cc7ls5awhb83jfm8kcaskglgqala32q5s8j87frz0f6wx57gbl4";
+        rev = "feae602db08e48b1d1a716fc9c4c8348aa5df17a";
+        sha256 = "0m7qr2nmfj6lbf9h6wfyapphcqwarqw3319zkdxqwzhbis81hlcb";
       };
     };
 
