@@ -1,6 +1,6 @@
 cabal-version: 3.0
 
-name:        sidekick
+name:        sidekick-ghci
 version:     0.0.0.0
 -- synopsis:
 -- description:
@@ -9,11 +9,6 @@ maintainer:  Evan Relf <evan@evanrelf.com>
 homepage:    https://github.com/evanrelf/sidekick
 license:     ISC
 copyright:   2021 Evan Relf
-
-
---------------------------------------------------------------------------------
--- Common
---------------------------------------------------------------------------------
 
 
 common common
@@ -74,68 +69,11 @@ common streamly-optimizations
     -fspec-constr-recursive=16
 
 
---------------------------------------------------------------------------------
--- sidekick
---------------------------------------------------------------------------------
-
-
 library
   import:
     , common
-    , extensions
-    , relude
     , streamly-optimizations
-  hs-source-dirs: sidekick
-  build-depends:
-    , brick
-    , optics
-    , optparse-applicative
-    , sidekick-ghci
-    , streamly
-    , streamly-fsnotify
-    , string-interpolate
-    , vty
-  exposed-modules:
-    , Sidekick
-    , Sidekick.FSNotify
-    , Sidekick.Options
-    , Sidekick.UI
-
-
-executable sidekick
-  import:
-    , common
-    , extensions
-    , streamly-optimizations
-    , threaded-executable
-  build-depends: sidekick
-  main-is: sidekick/Main.hs
-
-
-test-suite test-sidekick
-  import:
-    , common
-    , extensions
-    , threaded-executable
-  type: exitcode-stdio-1.0
-  main-is: Main.hs
-  hs-source-dirs: test-sidekick
-  build-depends:
-    , hspec
-    , sidekick
-
-
---------------------------------------------------------------------------------
--- sidekick-ghci
---------------------------------------------------------------------------------
-
-
-library sidekick-ghci
-  import:
-    , common
-    , streamly-optimizations
-  visibility: public
-  hs-source-dirs: sidekick-ghci
+  hs-source-dirs: src
   build-depends:
     , megaparsec
     , random
@@ -147,16 +85,18 @@ library sidekick-ghci
     , Sidekick.Ghci.Internal
 
 
-test-suite test-sidekick-ghci
+test-suite test
   import:
     , common
     , extensions
+    , relude
     , streamly-optimizations
     , threaded-executable
   type: exitcode-stdio-1.0
   main-is: Main.hs
-  hs-source-dirs: test-sidekick-ghci
+  hs-source-dirs: test
   build-depends:
     , hspec
     , sidekick-ghci
     , string-interpolate
+    , unliftio

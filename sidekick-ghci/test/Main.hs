@@ -16,8 +16,8 @@ main = Hspec.hspec do
   Hspec.describe "ghci" do
     mapM_ ($ "ghci") tests
 
-  Hspec.describe "cabal repl" do
-    mapM_ ($ "cabal repl") tests
+  Hspec.describe "cabal repl sidekick-ghci" do
+    mapM_ ($ "cabal repl sidekick-ghci") tests
 
 
 tests :: [Text -> Hspec.SpecWith ()]

@@ -1,12 +1,15 @@
 let
-  pkgs = import ./nix/nixpkgs.nix {};
-
-  sidekick = import ./default.nix;
+  pkgs = import ./nix/pkgs.nix;
 
 in
-  sidekick.env.overrideAttrs (old: {
-    buildInputs = with pkgs; old.buildInputs ++ [
-      cabal-install
-      ghcid
-    ];
-  })
+pkgs.haskellPackages.shellFor {
+  packages = p: [
+    p.sidekick
+    p.sidekick-ghci
+  ];
+
+  buildInputs = [
+    pkgs.cabal-install
+    pkgs.ghcid
+  ];
+}
