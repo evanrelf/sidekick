@@ -64,11 +64,14 @@ library
     , streamly
   hs-source-dirs: src
   build-depends:
+    , async
     , megaparsec
+    , process
     , random
+    , stm
     , streamly
     , text
-    , unliftio
+    , unliftio-core
   exposed-modules:
     Sidekick.Ghci
     Sidekick.Ghci.Internal

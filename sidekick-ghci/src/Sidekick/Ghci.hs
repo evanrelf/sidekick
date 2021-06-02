@@ -34,15 +34,15 @@ import Sidekick.Ghci.Internal
   )
 
 import Control.Monad (forM)
-import Control.Monad.IO.Class (MonadIO)
+import Control.Monad.IO.Class (MonadIO (..))
 import Data.Text (Text)
 import Data.Void (Void)
 
+import qualified Control.Exception as Exception
 import qualified Data.Char as Char
 import qualified Data.Text as Text
 import qualified Text.Megaparsec as Megaparsec
 import qualified Text.Megaparsec.Char as Megaparsec
-import qualified UnliftIO.Exception as Exception
 
 
 -- | Return GHCi session's current working directory, parsed from the
@@ -57,7 +57,7 @@ getCwd ghci = do
   (rawPaths, _) <- run ghci ":show paths"
 
   case Megaparsec.parse parseCwd "<interactive>" rawPaths of
-    Left err -> Exception.throwIO err
+    Left err -> liftIO $ Exception.throwIO err
     Right x -> pure x
 
 
@@ -73,7 +73,7 @@ getModules ghci = do
 
   forM (Text.lines rawModules) \rawModule ->
     case Megaparsec.parse parseModule "<interactive>" rawModule of
-      Left err -> Exception.throwIO err
+      Left err -> liftIO $ Exception.throwIO err
       Right x -> pure x
 
 

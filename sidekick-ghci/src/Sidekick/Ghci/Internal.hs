@@ -42,21 +42,21 @@ where
 
 import Control.Monad (unless)
 import Control.Monad.IO.Class (MonadIO (..))
+import Control.Monad.IO.Unlift (MonadUnliftIO (..))
 import Data.Function ((&))
 import Data.Text (Text)
-import UnliftIO (MonadUnliftIO)
-import UnliftIO.IO (Handle)
+import System.IO (Handle)
 import Prelude hiding (interact)
 
+import qualified Control.Concurrent.Async as Async
+import qualified Control.Concurrent.STM as STM
+import qualified Control.Exception as Exception
 import qualified Data.Text as Text
 import qualified Data.Text.IO as Text
 import qualified Streamly.Prelude as Streamly
+import qualified System.IO as IO
+import qualified System.Process as Process
 import qualified System.Random as Random
-import qualified UnliftIO.Async as Async
-import qualified UnliftIO.Exception as Exception
-import qualified UnliftIO.IO as IO
-import qualified UnliftIO.Process as Process
-import qualified UnliftIO.STM as STM
 
 
 -- | GHCi session handle
@@ -93,7 +93,8 @@ withGhci
   -> (forall s. Ghci s -> m a)
   -- ^ Operations using the GHCi session
   -> m a
-withGhci command action = Process.withCreateProcess processConfig setup
+withGhci command action = withRunInIO \unliftIO ->
+  Process.withCreateProcess processConfig \i o e p -> unliftIO $ setup i o e p
   where
   processConfig :: Process.CreateProcess
   processConfig =
@@ -110,11 +111,11 @@ withGhci command action = Process.withCreateProcess processConfig setup
     -> Maybe Handle
     -> Process.ProcessHandle
     -> m a
-  setup maybeStdinHandle maybeStdoutHandle maybeStderrHandle processHandle =
-    case (maybeStdinHandle, maybeStdoutHandle, maybeStderrHandle) of
+  setup i o e processHandle =
+    case (i, o, e) of
       (Just stdinHandle, Just stdoutHandle, Just stderrHandle) -> do
-        commandTVar <- STM.newTVarIO ""
-        separatorTVar <- STM.newTVarIO ""
+        commandTVar <- liftIO $ STM.newTVarIO ""
+        separatorTVar <- liftIO $ STM.newTVarIO ""
 
         let ghci = Ghci
               { stdinHandle
@@ -125,9 +126,9 @@ withGhci command action = Process.withCreateProcess processConfig setup
               , separatorTVar
               }
 
-        IO.hSetBuffering stdinHandle IO.LineBuffering
-        IO.hSetBuffering stdoutHandle IO.LineBuffering
-        IO.hSetBuffering stderrHandle IO.LineBuffering
+        liftIO $ IO.hSetBuffering stdinHandle IO.LineBuffering
+        liftIO $ IO.hSetBuffering stdoutHandle IO.LineBuffering
+        liftIO $ IO.hSetBuffering stderrHandle IO.LineBuffering
 
         -- Disable prompt
         liftIO $ Text.hPutStrLn stdinHandle ":set prompt \"\""
@@ -146,7 +147,7 @@ withGhci command action = Process.withCreateProcess processConfig setup
         action ghci
 
       _ ->
-        Exception.throwString "Failed to create GHCi handles"
+        liftIO $ Exception.throwIO (userError "Failed to create GHCi handles")
 
 
 -- | Run a command in GHCi, collecting its output
@@ -183,7 +184,7 @@ cancel
   => Ghci s
   -- ^ GHCi session handle
   -> m ()
-cancel ghci = Process.interruptProcessGroupOf (processHandle ghci)
+cancel ghci = liftIO $ Process.interruptProcessGroupOf (processHandle ghci)
 
 
 -- | Run a command in GHCi
@@ -194,8 +195,8 @@ send
   -> Text
   -- ^ GHCi command or Haskell expression
   -> m ()
-send ghci command = do
-  random <- liftIO $ Random.randomRIO @Int (0, 1_000_000)
+send ghci command = liftIO do
+  random <- Random.randomRIO @Int (0, 1_000_000)
 
   let separator :: Text
       separator = Text.pack ("__sidekick__" <> show random <> "__")
@@ -218,7 +219,7 @@ receive
   -- ^ GHCi session handle
   -> m (Text, Text)
   -- ^ @stdout@ and @stderr@ from GHCi
-receive ghci = do
+receive ghci = liftIO do
   (separator, command) <- STM.atomically do
     separator <- STM.readTVar (separatorTVar ghci)
     command <- STM.readTVar (commandTVar ghci)
@@ -233,7 +234,7 @@ receive ghci = do
           & Streamly.foldl' (<>) mempty
           & fmap Text.stripEnd
 
-  liftIO $ Async.concurrently
+  Async.concurrently
     do stream (stdoutHandle ghci)
     do stream (stderrHandle ghci)
 
@@ -244,7 +245,7 @@ receive_
   => Ghci s
   -- ^ GHCi session handle
   -> m ()
-receive_ ghci = do
+receive_ ghci = liftIO do
   separator <- STM.atomically $ STM.readTVar (separatorTVar ghci)
 
   let stream :: Handle -> IO ()
@@ -253,7 +254,7 @@ receive_ ghci = do
           & Streamly.takeWhile (/= separator)
           & Streamly.drain
 
-  liftIO $ Async.concurrently_
+  Async.concurrently_
     do stream (stdoutHandle ghci)
     do stream (stderrHandle ghci)
 
