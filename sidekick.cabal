@@ -19,6 +19,20 @@ copyright:   2021 Evan Relf
 common common
   build-depends: base
   default-language: Haskell2010
+  ghc-options:
+    -Wall
+    -Wcompat
+    -Werror=incomplete-record-updates
+    -Werror=incomplete-uni-patterns
+    -Werror=missing-fields
+    -Werror=partial-fields
+    -Widentities
+    -Wmissing-home-modules
+    -Wredundant-constraints
+    -foptimal-applicative-do
+    -fshow-warning-groups
+
+common extensions
   default-extensions:
     , BlockArguments
     , DeriveAnyClass
@@ -35,18 +49,6 @@ common common
     , OverloadedStrings
     , ScopedTypeVariables
     , TypeApplications
-  ghc-options:
-    -Wall
-    -Wcompat
-    -Werror=incomplete-record-updates
-    -Werror=incomplete-uni-patterns
-    -Werror=missing-fields
-    -Werror=partial-fields
-    -Widentities
-    -Wmissing-home-modules
-    -Wredundant-constraints
-    -foptimal-applicative-do
-    -fshow-warning-groups
 
 
 common relude
@@ -80,6 +82,7 @@ common streamly-optimizations
 library
   import:
     , common
+    , extensions
     , relude
     , streamly-optimizations
   hs-source-dirs: sidekick
@@ -102,6 +105,7 @@ library
 executable sidekick
   import:
     , common
+    , extensions
     , streamly-optimizations
     , threaded-executable
   build-depends: sidekick
@@ -111,6 +115,7 @@ executable sidekick
 test-suite test-sidekick
   import:
     , common
+    , extensions
     , threaded-executable
   type: exitcode-stdio-1.0
   main-is: Main.hs
@@ -145,6 +150,7 @@ library sidekick-ghci
 test-suite test-sidekick-ghci
   import:
     , common
+    , extensions
     , streamly-optimizations
     , threaded-executable
   type: exitcode-stdio-1.0

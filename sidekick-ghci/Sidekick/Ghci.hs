@@ -1,3 +1,6 @@
+{-# LANGUAGE BlockArguments #-}
+{-# LANGUAGE OverloadedStrings #-}
+
 -- | Interact with a live GHCi session
 
 module Sidekick.Ghci
