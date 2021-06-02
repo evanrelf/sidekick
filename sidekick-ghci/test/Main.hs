@@ -1,3 +1,7 @@
+{-# LANGUAGE BlockArguments #-}
+{-# LANGUAGE NumericUnderscores #-}
+{-# LANGUAGE OverloadedStrings #-}
+
 module Main (main) where
 
 import Test.Tasty.HUnit ((@?=))

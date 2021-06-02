@@ -35,25 +35,6 @@ common common
     -fshow-warning-groups
 
 
-common extensions
-  default-extensions:
-    BlockArguments
-    DeriveAnyClass
-    DeriveFunctor
-    DeriveGeneric
-    DerivingStrategies
-    DerivingVia
-    GeneralizedNewtypeDeriving
-    InstanceSigs
-    LambdaCase
-    NamedFieldPuns
-    NumericUnderscores
-    OverloadedLabels
-    OverloadedStrings
-    ScopedTypeVariables
-    TypeApplications
-
-
 common relude
   build-depends: relude
   mixins:
@@ -62,14 +43,14 @@ common relude
     , relude
 
 
-common threaded-executable
+common executable
   ghc-options:
     -threaded
     -rtsopts
     -with-rtsopts=-N
 
 
-common streamly-optimizations
+common streamly
   ghc-options:
     -O2
     -fdicts-strict
@@ -80,7 +61,7 @@ common streamly-optimizations
 library
   import:
     , common
-    , streamly-optimizations
+    , streamly
   hs-source-dirs: src
   build-depends:
     , megaparsec
@@ -96,10 +77,9 @@ library
 test-suite test
   import:
     , common
-    , extensions
+    , executable
     , relude
-    , streamly-optimizations
-    , threaded-executable
+    , streamly
   type: exitcode-stdio-1.0
   main-is: Main.hs
   hs-source-dirs: test
