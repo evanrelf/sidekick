@@ -1,6 +1,6 @@
 let
   haskellPackagesOverlay =
-    import ./nix/override-haskell-packages.nix {
+    import ./nix/lib/override-haskell-packages.nix {
       packages = {
         "sidekick" = pkgs.nix-gitignore.gitignoreSource [ ./.nixignore ] ./.;
         "optics" = "0.4";
