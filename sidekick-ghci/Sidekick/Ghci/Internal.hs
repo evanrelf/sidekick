@@ -41,7 +41,6 @@ import Data.Function ((&))
 import Data.Text (Text)
 import UnliftIO (MonadUnliftIO)
 import UnliftIO.IO (Handle)
-import UnliftIO.IORef (IORef)
 import Prelude hiding (interact)
 
 import qualified Data.Text as Text
@@ -51,8 +50,8 @@ import qualified System.Random as Random
 import qualified UnliftIO.Async as Async
 import qualified UnliftIO.Exception as Exception
 import qualified UnliftIO.IO as IO
-import qualified UnliftIO.IORef as IORef
 import qualified UnliftIO.Process as Process
+import qualified UnliftIO.STM as STM
 
 
 -- | GHCi session handle
@@ -69,10 +68,10 @@ data Ghci s = Ghci
   , processHandle :: Process.ProcessHandle
   -- ^ Process handle for GHCi session
 
-  , commandIORef :: IORef Text
+  , commandTVar :: STM.TVar Text
   -- ^ Mutable reference to last executed command
 
-  , separatorIORef :: IORef Text
+  , separatorTVar :: STM.TVar Text
   -- ^ Mutable reference to last separator
   }
 
@@ -109,16 +108,16 @@ withGhci command action = Process.withCreateProcess processConfig setup
   setup maybeStdinHandle maybeStdoutHandle maybeStderrHandle processHandle =
     case (maybeStdinHandle, maybeStdoutHandle, maybeStderrHandle) of
       (Just stdinHandle, Just stdoutHandle, Just stderrHandle) -> do
-        commandIORef <- IORef.newIORef ""
-        separatorIORef <- IORef.newIORef ""
+        commandTVar <- STM.newTVarIO ""
+        separatorTVar <- STM.newTVarIO ""
 
         let ghci = Ghci
               { stdinHandle
               , stdoutHandle
               , stderrHandle
               , processHandle
-              , commandIORef
-              , separatorIORef
+              , commandTVar
+              , separatorTVar
               }
 
         IO.hSetBuffering stdinHandle IO.LineBuffering
@@ -196,8 +195,9 @@ send ghci command = do
   let separator :: Text
       separator = Text.pack ("__sidekick__" <> show random <> "__")
 
-  IORef.atomicWriteIORef (separatorIORef ghci) separator
-  IORef.atomicWriteIORef (commandIORef ghci) command
+  STM.atomically do
+    STM.writeTVar (separatorTVar ghci) separator
+    STM.writeTVar (commandTVar ghci) command
 
   liftIO $ Text.hPutStrLn (stdinHandle ghci) command
   liftIO $ Text.hPutStrLn (stdinHandle ghci)
@@ -214,8 +214,10 @@ receive
   -> m (Text, Text)
   -- ^ @stdout@ and @stderr@ from GHCi
 receive ghci = do
-  separator <- IORef.readIORef (separatorIORef ghci)
-  command <- IORef.readIORef (commandIORef ghci)
+  (separator, command) <- STM.atomically do
+    separator <- STM.readTVar (separatorTVar ghci)
+    command <- STM.readTVar (commandTVar ghci)
+    pure (separator, command)
 
   let stream :: Handle -> IO Text
       stream handle =
@@ -238,7 +240,7 @@ receive_
   -- ^ GHCi session handle
   -> m ()
 receive_ ghci = do
-  separator <- IORef.readIORef (separatorIORef ghci)
+  separator <- STM.atomically $ STM.readTVar (separatorTVar ghci)
 
   let stream :: Handle -> IO ()
       stream handle =
