@@ -1,4 +1,4 @@
-cabal-version: 3.0
+cabal-version: 2.2
 
 name:        sidekick-ghci
 version:     0.0.0.0
@@ -27,23 +27,24 @@ common common
     -foptimal-applicative-do
     -fshow-warning-groups
 
+
 common extensions
   default-extensions:
-    , BlockArguments
-    , DeriveAnyClass
-    , DeriveFunctor
-    , DeriveGeneric
-    , DerivingStrategies
-    , DerivingVia
-    , GeneralizedNewtypeDeriving
-    , InstanceSigs
-    , LambdaCase
-    , NamedFieldPuns
-    , NumericUnderscores
-    , OverloadedLabels
-    , OverloadedStrings
-    , ScopedTypeVariables
-    , TypeApplications
+    BlockArguments
+    DeriveAnyClass
+    DeriveFunctor
+    DeriveGeneric
+    DerivingStrategies
+    DerivingVia
+    GeneralizedNewtypeDeriving
+    InstanceSigs
+    LambdaCase
+    NamedFieldPuns
+    NumericUnderscores
+    OverloadedLabels
+    OverloadedStrings
+    ScopedTypeVariables
+    TypeApplications
 
 
 common relude
@@ -81,8 +82,8 @@ library
     , text
     , unliftio
   exposed-modules:
-    , Sidekick.Ghci
-    , Sidekick.Ghci.Internal
+    Sidekick.Ghci
+    Sidekick.Ghci.Internal
 
 
 test-suite test

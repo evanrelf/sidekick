@@ -1,4 +1,4 @@
-cabal-version: 3.0
+cabal-version: 2.2
 
 name:        sidekick
 version:     0.0.0.0
@@ -9,6 +9,12 @@ maintainer:  Evan Relf <evan@evanrelf.com>
 homepage:    https://github.com/evanrelf/sidekick
 license:     BSD-3-Clause
 copyright:   2021 Evan Relf
+tested-with: GHC == 8.10.4
+
+license-file: ../LICENSE
+extra-source-files:
+  ../LICENSE
+  ../README.md
 
 
 common common
@@ -21,21 +27,21 @@ common common
     , relude
   default-language: Haskell2010
   default-extensions:
-    , BlockArguments
-    , DeriveAnyClass
-    , DeriveFunctor
-    , DeriveGeneric
-    , DerivingStrategies
-    , DerivingVia
-    , GeneralizedNewtypeDeriving
-    , InstanceSigs
-    , LambdaCase
-    , NamedFieldPuns
-    , NumericUnderscores
-    , OverloadedLabels
-    , OverloadedStrings
-    , ScopedTypeVariables
-    , TypeApplications
+    BlockArguments
+    DeriveAnyClass
+    DeriveFunctor
+    DeriveGeneric
+    DerivingStrategies
+    DerivingVia
+    GeneralizedNewtypeDeriving
+    InstanceSigs
+    LambdaCase
+    NamedFieldPuns
+    NumericUnderscores
+    OverloadedLabels
+    OverloadedStrings
+    ScopedTypeVariables
+    TypeApplications
   ghc-options:
     -Wall
     -Wcompat
@@ -81,10 +87,10 @@ library
     , unliftio
     , vty
   exposed-modules:
-    , Sidekick
-    , Sidekick.FSNotify
-    , Sidekick.Options
-    , Sidekick.UI
+    Sidekick
+    Sidekick.FSNotify
+    Sidekick.Options
+    Sidekick.UI
 
 
 executable sidekick
