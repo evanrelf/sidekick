@@ -1,7 +1,7 @@
 cabal-version: 2.2
 
 name:        sidekick-ghci
-version:     1.0.0.0
+version:     0.1.0.0
 synopsis:    Interact with a live GHCi session
 description: Interact with a live GHCi session
 category:    Development
