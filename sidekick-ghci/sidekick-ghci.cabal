@@ -7,7 +7,7 @@ version:     0.0.0.0
 author:      Evan Relf <evan@evanrelf.com>
 maintainer:  Evan Relf <evan@evanrelf.com>
 homepage:    https://github.com/evanrelf/sidekick
-license:     ISC
+license:     BSD-3-Clause
 copyright:   2021 Evan Relf
 
 
