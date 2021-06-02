@@ -37,6 +37,7 @@ common common
     , LambdaCase
     , NamedFieldPuns
     , NumericUnderscores
+    , OverloadedLabels
     , OverloadedStrings
     , ScopedTypeVariables
     , TypeApplications
@@ -61,17 +62,6 @@ common threaded-executable
     -with-rtsopts=-N
 
 
-common optics-labels
-  default-extensions:
-    , DataKinds
-    , DuplicateRecordFields
-    , FlexibleInstances
-    , MultiParamTypeClasses
-    , OverloadedLabels
-    , TypeFamilies
-    , UndecidableInstances
-
-
 common streamly-optimizations
   ghc-options:
     -O2
@@ -88,7 +78,6 @@ common streamly-optimizations
 library
   import:
     , common
-    , optics-labels
     , streamly-optimizations
   hs-source-dirs: sidekick
   build-depends:
@@ -136,7 +125,6 @@ test-suite test-sidekick
 library sidekick-ghci
   import:
     , common
-    , optics-labels
     , streamly-optimizations
   visibility: public
   hs-source-dirs: sidekick-ghci

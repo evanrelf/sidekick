@@ -1,5 +1,4 @@
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TemplateHaskell #-}
 
 module Sidekick.UI
   ( Event (..)
@@ -7,23 +6,20 @@ module Sidekick.UI
   )
 where
 
-import Optics ((.~), (^.))
+import Optics (set, view)
+import Prelude hiding (State, state)
 
 import qualified Brick
 import qualified Brick.Widgets.Border as Brick
 import qualified Brick.Widgets.Border.Style as Brick
 import qualified Brick.BChan as Brick
 import qualified Graphics.Vty as Vty
-import qualified Optics.TH
 
 
 data State = State
   { out :: Text
   , err :: Text
-  }
-
-
-Optics.TH.makeFieldLabelsWith Optics.TH.noPrefixFieldLabels ''State
+  } deriving stock Generic
 
 
 newtype Event
@@ -70,14 +66,14 @@ application = Brick.App
 draw :: State -> [Brick.Widget n]
 draw state = one do
   Brick.vBox
-    [ Brick.txt ("OUT: " <> (state ^. #out))
+    [ Brick.txt ("OUT: " <> view #out state)
         & Brick.vLimitPercent 50
         & Brick.padBottom Brick.Max
         & Brick.padRight Brick.Max
         -- & Brick.borderWithLabel (Brick.txt "stdout")
         -- & Brick.withBorderStyle (Brick.borderStyleFromChar ' ')
 
-    , Brick.txt ("ERR: " <> (state ^. #err))
+    , Brick.txt ("ERR: " <> view #err state)
         & Brick.vLimitPercent 50
         & Brick.padBottom Brick.Max
         & Brick.padRight Brick.Max
@@ -115,8 +111,8 @@ handleAppEvent :: State -> Event -> Brick.EventM n (Brick.Next State)
 handleAppEvent state = \case
   NewText (out, err) ->
     Brick.continue do
-      state & #out .~ out
-            & #err .~ err
+      state & set #out out
+            & set #err err
 
 
 handleVtyEvent :: State -> Vty.Event -> Brick.EventM n (Brick.Next State)

@@ -3,6 +3,10 @@ let
     import ./nix/override-haskell-packages.nix {
       packages = {
         "sidekick" = pkgs.nix-gitignore.gitignoreSource [ ./.nixignore ] ./.;
+        "optics" = "0.4";
+        "optics-core" = "0.4";
+        "optics-extra" = "0.4";
+        "optics-th" = "0.4";
       };
       overrideCabal = {
         "streamly-fsnotify" = old: {
