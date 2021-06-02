@@ -7,12 +7,18 @@ import qualified Test.Tasty as Tasty
 import qualified Test.Tasty.HUnit as HUnit
 import qualified UnliftIO.Async as Async
 import qualified UnliftIO.Concurrent as Concurrent
+import qualified UnliftIO.Environment as Environment
 import qualified UnliftIO.Timeout as Timeout
 
 
 main :: IO ()
-main = Tasty.defaultMain $
-  Tasty.testGroup "sidekick-ghci"
+main = do
+  -- Don't run tests in parallel by default, because parallel `cabal repl`
+  -- sessions conflict
+  whenNothingM_ (Environment.lookupEnv "TASTY_NUM_THREADS") do
+    Environment.setEnv "TASTY_NUM_THREADS" "1"
+
+  Tasty.defaultMain $ Tasty.testGroup "sidekick-ghci"
     [ Tasty.testGroup "ghci"
         (fmap ($ "ghci") tests)
 
