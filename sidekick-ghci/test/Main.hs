@@ -1,61 +1,80 @@
-{-# LANGUAGE QuasiQuotes #-}
-
 module Main (main) where
 
-import Data.String.Interpolate (i)
+import Test.Tasty.HUnit ((@?=))
 
 import qualified Sidekick.Ghci as Ghci
-import qualified Test.Hspec as Hspec
+import qualified Test.Tasty as Tasty
+import qualified Test.Tasty.HUnit as HUnit
 import qualified UnliftIO.Async as Async
 import qualified UnliftIO.Concurrent as Concurrent
 import qualified UnliftIO.Timeout as Timeout
 
 
 main :: IO ()
-main = Hspec.hspec do
-  Hspec.describe "ghci" do
-    mapM_ ($ "ghci") tests
+main = Tasty.defaultMain $
+  Tasty.testGroup "sidekick-ghci"
+    [ Tasty.testGroup "ghci"
+        (fmap ($ "ghci") tests)
 
-  Hspec.describe "cabal repl sidekick-ghci" do
-    mapM_ ($ "cabal repl sidekick-ghci") tests
+    , Tasty.testGroup "cabal repl"
+        (fmap ($ "cabal repl sidekick-ghci") tests)
+    ]
 
 
-tests :: [Text -> Hspec.SpecWith ()]
+tests :: [Text -> Tasty.TestTree]
 tests =
-  [ running
-  , cancelling
+  [ test_expressions
+  , test_commands
+  , test_cancellation
   ]
 
 
-running :: Text -> Hspec.SpecWith ()
-running ghciCommand = do
-  let run command = Ghci.withGhci ghciCommand \ghci -> Ghci.run ghci command
+test_expressions :: Text -> Tasty.TestTree
+test_expressions ghciCommand =
+  HUnit.testCase "evaluates expressions" $ Ghci.withGhci ghciCommand \ghci -> do
+    Ghci.run ghci "(2 :: Int) + 2"
+      `shouldReturn` ("4", "")
 
-  Hspec.it "evaluates expressions" do
-    run "(2 :: Int) + 2" `Hspec.shouldReturn` ("4", "")
-    run [i|("foo" :: String) == "bar"|] `Hspec.shouldReturn` ("False", "")
-
-  Hspec.it "runs commands" do
-    run ":type fmap" `Hspec.shouldReturn` ("fmap :: Functor f => (a -> b) -> f a -> f b", "")
-    run ":!echo hello" `Hspec.shouldReturn` ("hello", "")
-    run ":!echo hello >&2" `Hspec.shouldReturn` ("", "hello")
+    Ghci.run ghci "(\"foo\" :: String) == \"bar\""
+      `shouldReturn` ("False", "")
 
 
-cancelling :: Text -> Hspec.SpecWith ()
-cancelling ghciCommand = do
-  let scenario :: IO (Maybe ())
-      scenario = Ghci.withGhci ghciCommand \ghci -> do
-        Ghci.run_ ghci "import qualified Control.Concurrent as Concurrent"
-        Ghci.run_ ghci ":set -XNumericUnderscores"
+test_commands :: Text -> Tasty.TestTree
+test_commands ghciCommand =
+  HUnit.testCase "runs commands" $ Ghci.withGhci ghciCommand \ghci -> do
+    Ghci.run ghci ":type fmap"
+      `shouldReturn` ("fmap :: Functor f => (a -> b) -> f a -> f b", "")
 
-        -- If the operation can't be cancelled, it will block until the
-        -- countdown reaches zero, then the test will fail
-        Timeout.timeout 5_000_000 do
-          Async.concurrently_
-            -- Pretend GHCi is stuck evaluating an infinite list or something
-            do Ghci.run_ ghci "Concurrent.threadDelay 10_000_000"
-            -- Give GHCi a head start, then try to cancel the operation
-            do Concurrent.threadDelay 100_000 >> Ghci.cancel ghci
+    Ghci.run ghci ":!echo hello"
+      `shouldReturn` ("hello", "")
 
-  Hspec.it "cancels operations" do
-    scenario `Hspec.shouldReturn` Just ()
+    Ghci.run ghci ":!echo hello >&2"
+      `shouldReturn` ("", "hello")
+
+
+test_cancellation :: Text -> Tasty.TestTree
+test_cancellation ghciCommand =
+  let
+    scenario :: IO (Maybe ())
+    scenario = Ghci.withGhci ghciCommand \ghci -> do
+      Ghci.run_ ghci "import qualified Control.Concurrent as Concurrent"
+      Ghci.run_ ghci ":set -XNumericUnderscores"
+
+      -- If the operation can't be cancelled, it will block until the
+      -- countdown reaches zero, then the test will fail
+      Timeout.timeout 5_000_000 do
+        Async.concurrently_
+          -- Pretend GHCi is stuck evaluating an infinite list or something
+          do Ghci.run_ ghci "Concurrent.threadDelay 10_000_000"
+          -- Give GHCi a head start, then try to cancel the operation
+          do Concurrent.threadDelay 100_000 >> Ghci.cancel ghci
+
+  in
+  HUnit.testCase "cancels operations" do
+    scenario `shouldReturn` Just ()
+
+
+shouldReturn :: Eq a => Show a => IO a -> a -> HUnit.Assertion
+shouldReturn action actual = do
+  expected <- action
+  expected @?= actual
