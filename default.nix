@@ -12,9 +12,6 @@ let
       };
       overrides = {
         "fused-effects-th" = oldCabal: { doCheck = false; };
-        "relude" = oldCabal: {
-          patches = (oldCabal.patches or []) ++ [ ./nix/patches/relude.patch ];
-        };
       };
       hackage = {
         rev = "52415450270fb5d146097c36e74d1117ba0e4fe4";
