@@ -25,6 +25,7 @@ import Sidekick.Ghci.Internal
   )
 
 import Control.Monad (forM)
+import Control.Monad.IO.Class (MonadIO)
 import Data.Text (Text)
 import Data.Void (Void)
 
@@ -38,9 +39,10 @@ import qualified UnliftIO.Exception as Exception
 -- | Return GHCi session's current working directory, parsed from the
 -- @:show paths@ command
 getCwd
-  :: Ghci s
+  :: MonadIO m
+  => Ghci s
   -- ^ GHCi session handle
-  -> IO FilePath
+  -> m FilePath
   -- ^ GHCi session's current working directory
 getCwd ghci = do
   (rawPaths, _) <- run ghci ":show paths"
@@ -52,9 +54,10 @@ getCwd ghci = do
 
 -- | Return currently loaded modules, parsed from the @:show modules@ command
 getModules
-  :: Ghci s
+  :: MonadIO m
+  => Ghci s
   -- ^ GHCi session handle
-  -> IO [(Text, FilePath)]
+  -> m [(Text, FilePath)]
   -- ^ Module name and file path for currently loaded modules
 getModules ghci = do
   (rawModules, _) <- run ghci ":show modules"
