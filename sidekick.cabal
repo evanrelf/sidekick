@@ -80,11 +80,6 @@ common streamly-optimizations
     -fspec-constr-recursive=16
 
 
-common splint
-  build-depends: splint
-  ghc-options: -fplugin=Splint
-
-
 --------------------------------------------------------------------------------
 -- sidekick
 --------------------------------------------------------------------------------
@@ -94,7 +89,6 @@ library
   import:
     , common
     , optics-labels
-    , splint
     , streamly-optimizations
   hs-source-dirs: sidekick
   build-depends:
@@ -125,7 +119,6 @@ executable sidekick
 test-suite test-sidekick
   import:
     , common
-    , splint
     , threaded-executable
   type: exitcode-stdio-1.0
   main-is: Main.hs
@@ -144,7 +137,6 @@ library sidekick-ghci
   import:
     , common
     , optics-labels
-    , splint
     , streamly-optimizations
   visibility: public
   hs-source-dirs: sidekick-ghci
@@ -163,7 +155,6 @@ library sidekick-ghci
 test-suite test-sidekick-ghci
   import:
     , common
-    , splint
     , streamly-optimizations
     , threaded-executable
   type: exitcode-stdio-1.0
