@@ -1,11 +1,20 @@
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE OverloadedStrings #-}
 
--- | Interact with a live GHCi session
+-- |
+-- Module:     Sidekick.Ghci
+-- Stability:  experimental
+-- License:    BSD-3-Clause
+-- Copyright:  © 2021 Evan Relf
+-- Maintainer: evan@evanrelf.com
+--
+-- Interact with a live GHCi session
 
 module Sidekick.Ghci
-  ( -- * Start GHCi session
-    withGhci
+  ( Ghci
+
+    -- * Start GHCi session
+  , withGhci
 
     -- * Operations
   , run
@@ -13,9 +22,6 @@ module Sidekick.Ghci
   , cancel
   , getCwd
   , getModules
-
-    -- * Other
-  , Ghci
   )
 where
 

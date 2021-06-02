@@ -7,7 +7,12 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
 
--- | Interact with a live GHCi session
+-- |
+-- Module:     Sidekick.Ghci.Internal
+-- Stability:  experimental
+-- License:    BSD-3-Clause
+-- Copyright:  © 2021 Evan Relf
+-- Maintainer: evan@evanrelf.com
 
 module Sidekick.Ghci.Internal
   ( Ghci (..)

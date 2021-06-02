@@ -1,14 +1,21 @@
 cabal-version: 2.2
 
 name:        sidekick-ghci
-version:     0.0.0.0
--- synopsis:
--- description:
+version:     1.0.0.0
+synopsis:    Interact with a live GHCi session
+description: Interact with a live GHCi session
+category:    Development
 author:      Evan Relf <evan@evanrelf.com>
 maintainer:  Evan Relf <evan@evanrelf.com>
 homepage:    https://github.com/evanrelf/sidekick
 license:     BSD-3-Clause
 copyright:   2021 Evan Relf
+tested-with: GHC == 8.10.4
+
+license-file: LICENSE
+extra-source-files:
+  LICENSE
+  README.md
 
 
 common common

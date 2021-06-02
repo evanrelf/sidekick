@@ -11,10 +11,10 @@ license:     BSD-3-Clause
 copyright:   2021 Evan Relf
 tested-with: GHC == 8.10.4
 
-license-file: ../LICENSE
+license-file: LICENSE
 extra-source-files:
-  ../LICENSE
-  ../README.md
+  LICENSE
+  README.md
 
 
 common common
