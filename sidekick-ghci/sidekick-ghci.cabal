@@ -10,7 +10,7 @@ maintainer:  Evan Relf <evan@evanrelf.com>
 homepage:    https://github.com/evanrelf/sidekick
 license:     BSD-3-Clause
 copyright:   2021 Evan Relf
-tested-with: GHC == 8.10.4
+tested-with: GHC == 8.6.5, GHC == 8.8.4, GHC == 8.10.4
 
 license-file: LICENSE
 extra-source-files:
@@ -19,7 +19,7 @@ extra-source-files:
 
 
 common common
-  build-depends: base
+  build-depends: base >= 4.12 && < 5.0
   default-language: Haskell2010
   ghc-options:
     -Wall
@@ -31,7 +31,6 @@ common common
     -Widentities
     -Wmissing-home-modules
     -Wredundant-constraints
-    -foptimal-applicative-do
     -fshow-warning-groups
 
 
@@ -47,12 +46,12 @@ library
   import: common, streamly
   hs-source-dirs: src
   build-depends:
-    , async
-    , megaparsec
+    , async         >= 2.1.1 && < 3.0
+    , megaparsec    >= 6.0   && < 10.0
     , process
     , random
     , stm
-    , streamly
+    , streamly      >= 0.7   && < 0.8
     , text
     , unliftio-core
   exposed-modules:
