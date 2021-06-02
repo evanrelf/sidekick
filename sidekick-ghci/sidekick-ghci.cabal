@@ -35,21 +35,6 @@ common common
     -fshow-warning-groups
 
 
-common relude
-  build-depends: relude
-  mixins:
-    , base hiding (Prelude)
-    , relude (Relude as Prelude)
-    , relude
-
-
-common executable
-  ghc-options:
-    -threaded
-    -rtsopts
-    -with-rtsopts=-N
-
-
 common streamly
   ghc-options:
     -O2
@@ -59,9 +44,7 @@ common streamly
 
 
 library
-  import:
-    , common
-    , streamly
+  import: common, streamly
   hs-source-dirs: src
   build-depends:
     , async
@@ -78,16 +61,21 @@ library
 
 
 test-suite test
-  import:
-    , common
-    , executable
+  import: common, streamly
+  mixins:
+    , base hiding (Prelude)
+    , relude (Relude as Prelude)
     , relude
-    , streamly
   type: exitcode-stdio-1.0
   main-is: Main.hs
   hs-source-dirs: test
   build-depends:
+    , relude
     , sidekick-ghci
     , tasty
     , tasty-hunit
     , unliftio
+  ghc-options:
+    -threaded
+    -rtsopts
+    -with-rtsopts=-N
