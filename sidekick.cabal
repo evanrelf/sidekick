@@ -17,13 +17,7 @@ copyright:   2021 Evan Relf
 
 
 common common
-  build-depends:
-    , base
-    , relude
-    , unliftio
-  mixins:
-    , base hiding (Prelude)
-    , relude (Relude as Prelude)
+  build-depends: base
   default-language: Haskell2010
   default-extensions:
     , BlockArguments
@@ -55,6 +49,14 @@ common common
     -fshow-warning-groups
 
 
+common relude
+  build-depends: relude
+  mixins:
+    , base hiding (Prelude)
+    , relude (Relude as Prelude)
+    , relude
+
+
 common threaded-executable
   ghc-options:
     -threaded
@@ -78,6 +80,7 @@ common streamly-optimizations
 library
   import:
     , common
+    , relude
     , streamly-optimizations
   hs-source-dirs: sidekick
   build-depends:
@@ -130,11 +133,10 @@ library sidekick-ghci
   hs-source-dirs: sidekick-ghci
   build-depends:
     , megaparsec
-    , optics
     , random
     , streamly
-    , string-interpolate
     , text
+    , unliftio
   exposed-modules:
     , Sidekick.Ghci
     , Sidekick.Ghci.Internal

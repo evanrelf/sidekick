@@ -23,7 +23,12 @@ import Sidekick.Ghci.Internal
   , cancel
   )
 
+import Control.Monad (forM)
+import Data.Text (Text)
+import Data.Void (Void)
+
 import qualified Data.Char as Char
+import qualified Data.Text as Text
 import qualified Text.Megaparsec as Megaparsec
 import qualified Text.Megaparsec.Char as Megaparsec
 import qualified UnliftIO.Exception as Exception
@@ -53,7 +58,7 @@ getModules
 getModules ghci = do
   (rawModules, _) <- run ghci ":show modules"
 
-  forM (lines rawModules) \rawModule ->
+  forM (Text.lines rawModules) \rawModule ->
     case Megaparsec.parse parseModule "<interactive>" rawModule of
       Left err -> Exception.throwIO err
       Right x -> pure x
@@ -67,7 +72,7 @@ parseCwd = do
   _ <- Megaparsec.string "current working directory:"
   Megaparsec.space1
   cwd <- Megaparsec.takeWhile1P Nothing (/= '\n')
-  pure (toString cwd)
+  pure (Text.unpack cwd)
 
 
 parseModule :: Parser (Text, FilePath)
@@ -77,4 +82,4 @@ parseModule = do
   _ <- Megaparsec.char '('
   Megaparsec.space1
   modulePath <- Megaparsec.takeWhile1P Nothing (/= ',')
-  pure (moduleName, toString modulePath)
+  pure (moduleName, Text.unpack modulePath)

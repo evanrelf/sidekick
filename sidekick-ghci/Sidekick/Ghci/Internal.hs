@@ -1,8 +1,4 @@
-{-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeApplications #-}
 
 -- | Interact with a live GHCi session
 
@@ -29,15 +25,21 @@ module Sidekick.Ghci.Internal
   )
 where
 
-import Data.String.Interpolate (i)
-import Optics (view)
+import Control.Monad (unless)
+import Control.Monad.IO.Class (MonadIO (..))
+import Data.Function ((&))
+import Data.Text (Text)
+import UnliftIO.IO (Handle)
+import UnliftIO.IORef (IORef)
+import Prelude hiding (interact)
 
 import qualified Data.Text as Text
-import qualified Data.Text.IO as Text.IO
+import qualified Data.Text.IO as Text
 import qualified Streamly.Prelude as Streamly
 import qualified System.Random as Random
 import qualified UnliftIO.Async as Async
 import qualified UnliftIO.IO as IO
+import qualified UnliftIO.IORef as IORef
 import qualified UnliftIO.Process as Process
 
 
@@ -55,7 +57,7 @@ data Ghci s = Ghci
   -- ^ Mutable reference to last executed command
   , separatorIORef :: IORef Text
   -- ^ Mutable reference to last separator
-  } deriving stock Generic
+  }
 
 
 -- | Run operations on a live GHCi session
@@ -76,7 +78,7 @@ withGhci command action = liftIO do
   where
   processConfig :: Process.CreateProcess
   processConfig =
-    (Process.shell (toString command))
+    (Process.shell (Text.unpack command))
       { Process.std_in = Process.CreatePipe
       , Process.std_out = Process.CreatePipe
       , Process.std_err = Process.CreatePipe
@@ -96,8 +98,8 @@ withGhci command action = liftIO do
         IO.hSetBuffering stdoutHandle IO.LineBuffering
         IO.hSetBuffering stderrHandle IO.LineBuffering
 
-        commandIORef <- newIORef ""
-        separatorIORef <- newIORef ""
+        commandIORef <- IORef.newIORef ""
+        separatorIORef <- IORef.newIORef ""
 
         let ghci = Ghci
               { stdinHandle
@@ -109,8 +111,8 @@ withGhci command action = liftIO do
               }
 
         -- Disable prompt
-        Text.IO.hPutStrLn stdinHandle [i|:set prompt ""|]
-        Text.IO.hPutStrLn stdinHandle [i|:set prompt-cont ""|]
+        Text.hPutStrLn stdinHandle ":set prompt \"\""
+        Text.hPutStrLn stdinHandle ":set prompt-cont \"\""
 
         -- Import 'System.IO' for 'hPutStrLn' and friends, and print initial
         -- separator
@@ -159,8 +161,7 @@ cancel
   :: Ghci s
   -- ^ GHCi session handle
   -> IO ()
-cancel ghci =
-  Process.interruptProcessGroupOf (view #processHandle ghci)
+cancel ghci = Process.interruptProcessGroupOf (processHandle ghci)
 
 
 -- | Run a command in GHCi
@@ -172,16 +173,16 @@ send
   -> IO ()
 send ghci command = do
   random <- Random.randomRIO @Int (0, 1_000_000)
-  let separator = [i|__sidekick__#{random}__|]
+  let separator = Text.pack ("__sidekick__" <> show random <> "__")
 
-  atomicWriteIORef (view #separatorIORef ghci) separator
-  atomicWriteIORef (view #commandIORef ghci) command
+  IORef.atomicWriteIORef (separatorIORef ghci) separator
+  IORef.atomicWriteIORef (commandIORef ghci) command
 
-  Text.IO.hPutStrLn (view #stdinHandle ghci) command
-  Text.IO.hPutStrLn (view #stdinHandle ghci)
-    [i|SIDEKICK.hPutStrLn SIDEKICK.stdout "\\n#{separator}"|]
-  Text.IO.hPutStrLn (view #stdinHandle ghci)
-    [i|SIDEKICK.hPutStrLn SIDEKICK.stderr "\\n#{separator}"|]
+  Text.hPutStrLn (stdinHandle ghci) command
+  Text.hPutStrLn (stdinHandle ghci)
+    ("SIDEKICK.hPutStrLn SIDEKICK.stdout \"\\n" <> separator <> "\"")
+  Text.hPutStrLn (stdinHandle ghci)
+    ("SIDEKICK.hPutStrLn SIDEKICK.stderr \"\\n" <> separator <> "\"")
 
 
 -- | Collect output from the previously run command
@@ -191,11 +192,11 @@ receive
   -> IO (Text, Text)
   -- ^ @stdout@ and @stderr@ from GHCi
 receive ghci = do
-  separator <- readIORef (view #separatorIORef ghci)
-  command <- readIORef (view #commandIORef ghci)
+  separator <- IORef.readIORef (separatorIORef ghci)
+  command <- IORef.readIORef (commandIORef ghci)
 
   let stream handle =
-        Streamly.repeatM (Text.IO.hGetLine handle)
+        Streamly.repeatM (Text.hGetLine handle)
           & Streamly.takeWhile (/= separator)
           & Streamly.filter (/= command)
           & Streamly.map (`Text.snoc` '\n')
@@ -203,8 +204,8 @@ receive ghci = do
           & fmap Text.stripEnd
 
   Async.concurrently
-    do stream (view #stdoutHandle ghci)
-    do stream (view #stderrHandle ghci)
+    do stream (stdoutHandle ghci)
+    do stream (stderrHandle ghci)
 
 
 -- | Ignore output from the previously run command
@@ -213,16 +214,16 @@ receive_
   -- ^ GHCi session state
   -> IO ()
 receive_ ghci = do
-  separator <- readIORef (view #separatorIORef ghci)
+  separator <- IORef.readIORef (separatorIORef ghci)
 
   let stream handle =
-        Streamly.repeatM (Text.IO.hGetLine handle)
+        Streamly.repeatM (Text.hGetLine handle)
           & Streamly.takeWhile (/= separator)
           & Streamly.drain
 
   Async.concurrently_
-    do stream (view #stdoutHandle ghci)
-    do stream (view #stderrHandle ghci)
+    do stream (stdoutHandle ghci)
+    do stream (stderrHandle ghci)
 
 
 -- | Interact with the GHCi session directly via @stdin@ and @stdout@. Useful
@@ -236,10 +237,10 @@ interact
   -- ^ GHCi session state
   -> IO ()
 interact ghci = do
-  Streamly.repeatM getLine
+  Streamly.repeatM Text.getLine
     & Streamly.mapM (run ghci)
     & Streamly.trace (\(out, err) -> do
-        unless (Text.null err) $ Text.IO.hPutStrLn stderr err
-        unless (Text.null out) $ putTextLn out
+        unless (Text.null err) $ Text.hPutStrLn IO.stderr err
+        unless (Text.null out) $ Text.hPutStrLn IO.stdout out
       )
     & Streamly.drain
