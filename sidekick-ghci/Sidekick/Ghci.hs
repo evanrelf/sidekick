@@ -1,16 +1,17 @@
 -- | Interact with a live GHCi session
 
 module Sidekick.Ghci
-  (
-  -- * Start GHCi session
+  ( -- * Start GHCi session
     withGhci
-  -- * Operations
+
+    -- * Operations
   , run
   , run_
   , cancel
   , getCwd
   , getModules
-  -- * Other
+
+    -- * Other
   , Ghci
   )
 where

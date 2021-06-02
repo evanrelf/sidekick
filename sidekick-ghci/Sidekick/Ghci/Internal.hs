@@ -3,24 +3,27 @@
 -- | Interact with a live GHCi session
 
 module Sidekick.Ghci.Internal
-  (
-    Ghci (..)
-  -- * Start GHCi session
+  ( Ghci (..)
+
+    -- * Start GHCi session
   , withGhci
-  -- * High-level operations
-  -- | High-level wrappers for 'send', 'receive', and 'receive_'. Calls to 'send'
-  -- are always followed by 'receive' or 'receive_' to ensure the GHCi session
-  -- is in a good state for the next command.
+
+    -- * High-level operations
+    -- | High-level wrappers for 'send', 'receive', and 'receive_'. Calls to
+    -- 'send' are always followed by 'receive' or 'receive_' to ensure the GHCi
+    -- session is in a good state for the next command.
   , run
   , run_
   , cancel
-  -- * Low-level operations
-  -- | Low-level primitives for more direct manipulation of the GHCi session,
-  -- providing no checks or guarantees that you maintain a good state.
+
+    -- * Low-level operations
+    -- | Low-level primitives for more direct manipulation of the GHCi session,
+    -- providing no checks or guarantees that you maintain a good state.
   , send
   , receive
   , receive_
-  -- * Debugging
+
+    -- * Debugging
   , interact
   )
 where
@@ -43,18 +46,23 @@ import qualified UnliftIO.IORef as IORef
 import qualified UnliftIO.Process as Process
 
 
--- | GHCi session state
+-- | GHCi session handle
 data Ghci s = Ghci
   { stdinHandle :: Handle
   -- ^ Handle for GHCi session's @stdin@ stream
+
   , stdoutHandle :: Handle
   -- ^ Handle for GHCi session's @stderr@ stream
+
   , stderrHandle :: Handle
   -- ^ Handle for GHCi session's @stdin@ stream
+
   , processHandle :: Process.ProcessHandle
   -- ^ Process handle for GHCi session
+
   , commandIORef :: IORef Text
   -- ^ Mutable reference to last executed command
+
   , separatorIORef :: IORef Text
   -- ^ Mutable reference to last separator
   }
@@ -72,9 +80,7 @@ withGhci
   -> (forall s. Ghci s -> IO a)
   -- ^ Operations using the GHCi session
   -> m a
-withGhci command action = liftIO do
-  Process.withCreateProcess processConfig setup
-
+withGhci command action = liftIO $ Process.withCreateProcess processConfig setup
   where
   processConfig :: Process.CreateProcess
   processConfig =
@@ -94,10 +100,6 @@ withGhci command action = liftIO do
   setup maybeStdinHandle maybeStdoutHandle maybeStderrHandle processHandle =
     case (maybeStdinHandle, maybeStdoutHandle, maybeStderrHandle) of
       (Just stdinHandle, Just stdoutHandle, Just stderrHandle) -> do
-        IO.hSetBuffering stdinHandle IO.LineBuffering
-        IO.hSetBuffering stdoutHandle IO.LineBuffering
-        IO.hSetBuffering stderrHandle IO.LineBuffering
-
         commandIORef <- IORef.newIORef ""
         separatorIORef <- IORef.newIORef ""
 
@@ -109,6 +111,10 @@ withGhci command action = liftIO do
               , commandIORef
               , separatorIORef
               }
+
+        IO.hSetBuffering stdinHandle IO.LineBuffering
+        IO.hSetBuffering stdoutHandle IO.LineBuffering
+        IO.hSetBuffering stderrHandle IO.LineBuffering
 
         -- Disable prompt
         Text.hPutStrLn stdinHandle ":set prompt \"\""
@@ -130,7 +136,7 @@ withGhci command action = liftIO do
         fail "Failed to create GHCi handles"
 
 
--- | Run a command in GHCi, collecting its output 'System.IO'
+-- | Run a command in GHCi, collecting its output
 run
   :: Ghci s
   -- ^ GHCi session handle
@@ -167,13 +173,15 @@ cancel ghci = Process.interruptProcessGroupOf (processHandle ghci)
 -- | Run a command in GHCi
 send
   :: Ghci s
-  -- ^ GHCi session state
+  -- ^ GHCi session handle
   -> Text
   -- ^ GHCi command or Haskell expression
   -> IO ()
 send ghci command = do
   random <- Random.randomRIO @Int (0, 1_000_000)
-  let separator = Text.pack ("__sidekick__" <> show random <> "__")
+
+  let separator :: Text
+      separator = Text.pack ("__sidekick__" <> show random <> "__")
 
   IORef.atomicWriteIORef (separatorIORef ghci) separator
   IORef.atomicWriteIORef (commandIORef ghci) command
@@ -188,14 +196,15 @@ send ghci command = do
 -- | Collect output from the previously run command
 receive
   :: Ghci s
-  -- ^ GHCi session state
+  -- ^ GHCi session handle
   -> IO (Text, Text)
   -- ^ @stdout@ and @stderr@ from GHCi
 receive ghci = do
   separator <- IORef.readIORef (separatorIORef ghci)
   command <- IORef.readIORef (commandIORef ghci)
 
-  let stream handle =
+  let stream :: Handle -> IO Text
+      stream handle =
         Streamly.repeatM (Text.hGetLine handle)
           & Streamly.takeWhile (/= separator)
           & Streamly.filter (/= command)
@@ -211,12 +220,13 @@ receive ghci = do
 -- | Ignore output from the previously run command
 receive_
   :: Ghci s
-  -- ^ GHCi session state
+  -- ^ GHCi session handle
   -> IO ()
 receive_ ghci = do
   separator <- IORef.readIORef (separatorIORef ghci)
 
-  let stream handle =
+  let stream :: Handle -> IO ()
+      stream handle =
         Streamly.repeatM (Text.hGetLine handle)
           & Streamly.takeWhile (/= separator)
           & Streamly.drain
@@ -234,7 +244,7 @@ receive_ ghci = do
 -- 2
 interact
   :: Ghci s
-  -- ^ GHCi session state
+  -- ^ GHCi session handle
   -> IO ()
 interact ghci = do
   Streamly.repeatM Text.getLine
