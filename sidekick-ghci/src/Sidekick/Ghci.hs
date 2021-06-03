@@ -27,6 +27,7 @@ module Sidekick.Ghci
     -- providing no checks or guarantees that you maintain a good state.
   , send
   , receive
+  , receiveStreaming
   , receive_
 
     -- * Debugging

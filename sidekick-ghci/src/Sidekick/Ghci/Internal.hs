@@ -1,4 +1,5 @@
 {-# LANGUAGE BlockArguments #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
@@ -26,6 +27,7 @@ import qualified Control.Concurrent.STM as STM
 import qualified Control.Exception as Exception
 import qualified Data.Text as Text
 import qualified Data.Text.IO as Text
+import qualified Streamly as Streamly
 import qualified Streamly.Prelude as Streamly
 import qualified System.IO as IO
 import qualified System.Process as Process
@@ -198,23 +200,45 @@ receive
   -> m (Text, Text)
   -- ^ @stdout@ and @stderr@ from GHCi
 receive ghci = liftIO do
-  (n, command) <- STM.atomically do
-    promptNumber <- STM.readTVar (promptNumberTVar ghci)
-    command <- STM.readTVar (commandTVar ghci)
-    pure (promptNumber, command)
+  (stdoutStream, stderrStream) <- receiveStreaming ghci
 
-  let stream :: Handle -> IO Text
-      stream handle =
-        Streamly.repeatM (Text.hGetLine handle)
-          & Streamly.takeWhile (/= separator n)
-          & Streamly.filter (/= command)
+  let consume :: Streamly.SerialT IO Text -> IO Text
+      consume stream =
+        stream
           & Streamly.map (`Text.snoc` '\n')
           & Streamly.foldl' (<>) mempty
           & fmap Text.stripEnd
 
   Async.concurrently
-    do stream (stdoutHandle ghci)
-    do stream (stderrHandle ghci)
+    do consume stdoutStream
+    do consume stderrStream
+
+
+-- | Stream output from the previously run command.
+receiveStreaming
+  :: forall m t s
+   . Streamly.MonadAsync m
+  => Streamly.IsStream t
+  => Ghci s
+  -- ^ GHCi session handle
+  -> m (t m Text, t m Text)
+  -- ^ @stdout@ and @stderr@ streams from GHCi
+receiveStreaming ghci = liftIO do
+  (n, command) <- STM.atomically do
+    promptNumber <- STM.readTVar (promptNumberTVar ghci)
+    command <- STM.readTVar (commandTVar ghci)
+    pure (promptNumber, command)
+
+  let stream :: Handle -> t m Text
+      stream handle =
+        Streamly.repeatM (liftIO $ Text.hGetLine handle)
+          & Streamly.takeWhile (/= separator n)
+          & Streamly.filter (/= command)
+
+  pure
+    ( stream (stdoutHandle ghci)
+    , stream (stderrHandle ghci)
+    )
 
 
 -- | Ignore output from the previously run command
@@ -226,15 +250,15 @@ receive_
 receive_ ghci = liftIO do
   n <- STM.atomically $ STM.readTVar (promptNumberTVar ghci)
 
-  let stream :: Handle -> IO ()
-      stream handle =
+  let consume :: Handle -> IO ()
+      consume handle =
         Streamly.repeatM (Text.hGetLine handle)
           & Streamly.takeWhile (/= separator n)
           & Streamly.drain
 
   Async.concurrently_
-    do stream (stdoutHandle ghci)
-    do stream (stderrHandle ghci)
+    do consume (stdoutHandle ghci)
+    do consume (stderrHandle ghci)
 
 
 -- | Interact with the GHCi session directly via @stdin@ and @stdout@. Useful
