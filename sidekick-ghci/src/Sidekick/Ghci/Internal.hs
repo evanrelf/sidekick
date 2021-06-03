@@ -1,11 +1,8 @@
 {-# LANGUAGE BlockArguments #-}
-{-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE NumericUnderscores #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeApplications #-}
 
 -- |
 -- Module:     Sidekick.Ghci.Internal
@@ -32,7 +29,6 @@ import qualified Data.Text.IO as Text
 import qualified Streamly.Prelude as Streamly
 import qualified System.IO as IO
 import qualified System.Process as Process
-import qualified System.Random as Random
 
 
 -- | GHCi session handle
@@ -52,8 +48,8 @@ data Ghci s = Ghci
   , commandTVar :: STM.TVar Text
   -- ^ Mutable reference to last executed command
 
-  , separatorTVar :: STM.TVar Text
-  -- ^ Mutable reference to last separator
+  , promptNumberTVar :: STM.TVar Integer
+  -- ^ Mutable reference to last prompt number
   }
 
 
@@ -91,7 +87,7 @@ withGhci command action = withRunInIO \unliftIO ->
     case (i, o, e) of
       (Just stdinHandle, Just stdoutHandle, Just stderrHandle) -> do
         commandTVar <- liftIO $ STM.newTVarIO ""
-        separatorTVar <- liftIO $ STM.newTVarIO ""
+        promptNumberTVar <- liftIO $ STM.newTVarIO 0
 
         let ghci = Ghci
               { stdinHandle
@@ -99,7 +95,7 @@ withGhci command action = withRunInIO \unliftIO ->
               , stderrHandle
               , processHandle
               , commandTVar
-              , separatorTVar
+              , promptNumberTVar
               }
 
         liftIO $ IO.hSetBuffering stdinHandle IO.LineBuffering
@@ -172,20 +168,20 @@ send
   -- ^ GHCi command or Haskell expression
   -> m ()
 send ghci command = liftIO do
-  random <- Random.randomRIO @Int (0, 1_000_000)
+  n <- STM.atomically do
+    promptNumber <- (+ 1) <$> STM.readTVar (promptNumberTVar ghci)
 
-  let separator :: Text
-      separator = Text.pack ("__sidekick__" <> show random <> "__")
-
-  STM.atomically do
-    STM.writeTVar (separatorTVar ghci) separator
+    STM.writeTVar (promptNumberTVar ghci) promptNumber
     STM.writeTVar (commandTVar ghci) command
 
-  liftIO $ Text.hPutStrLn (stdinHandle ghci) command
-  liftIO $ Text.hPutStrLn (stdinHandle ghci)
-    ("SIDEKICK.hPutStrLn SIDEKICK.stdout \"\\n" <> separator <> "\"")
-  liftIO $ Text.hPutStrLn (stdinHandle ghci)
-    ("SIDEKICK.hPutStrLn SIDEKICK.stderr \"\\n" <> separator <> "\"")
+    pure promptNumber
+
+  liftIO do
+    Text.hPutStrLn (stdinHandle ghci) command
+    Text.hPutStrLn (stdinHandle ghci)
+      ("SIDEKICK.hPutStrLn SIDEKICK.stdout \"\\n" <> separator n <> "\"")
+    Text.hPutStrLn (stdinHandle ghci)
+      ("SIDEKICK.hPutStrLn SIDEKICK.stderr \"\\n" <> separator n <> "\"")
 
 
 -- | Collect output from the previously run command
@@ -196,15 +192,15 @@ receive
   -> m (Text, Text)
   -- ^ @stdout@ and @stderr@ from GHCi
 receive ghci = liftIO do
-  (separator, command) <- STM.atomically do
-    separator <- STM.readTVar (separatorTVar ghci)
+  (n, command) <- STM.atomically do
+    promptNumber <- STM.readTVar (promptNumberTVar ghci)
     command <- STM.readTVar (commandTVar ghci)
-    pure (separator, command)
+    pure (promptNumber, command)
 
   let stream :: Handle -> IO Text
       stream handle =
         Streamly.repeatM (Text.hGetLine handle)
-          & Streamly.takeWhile (/= separator)
+          & Streamly.takeWhile (/= separator n)
           & Streamly.filter (/= command)
           & Streamly.map (`Text.snoc` '\n')
           & Streamly.foldl' (<>) mempty
@@ -222,12 +218,12 @@ receive_
   -- ^ GHCi session handle
   -> m ()
 receive_ ghci = liftIO do
-  separator <- STM.atomically $ STM.readTVar (separatorTVar ghci)
+  n <- STM.atomically $ STM.readTVar (promptNumberTVar ghci)
 
   let stream :: Handle -> IO ()
       stream handle =
         Streamly.repeatM (Text.hGetLine handle)
-          & Streamly.takeWhile (/= separator)
+          & Streamly.takeWhile (/= separator n)
           & Streamly.drain
 
   Async.concurrently_
@@ -254,3 +250,7 @@ interact ghci = liftIO do
         unless (Text.null out) $ Text.hPutStrLn IO.stdout out
       )
     & Streamly.drain
+
+
+separator :: Integer -> Text
+separator n = Text.pack ("__sidekick__" <> show n <> "__")
