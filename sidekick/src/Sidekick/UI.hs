@@ -75,13 +75,15 @@ draw state = one do
   colored color = toText $ Ansi.setSGRCode [Ansi.SetColor Ansi.Foreground Ansi.Dull color]
   bold = toText $ Ansi.setSGRCode [Ansi.SetConsoleIntensity Ansi.BoldIntensity]
   reset = toText $ Ansi.setSGRCode [Ansi.Reset]
-  content =
-    if err == mempty then
-      bold <> colored Ansi.Green <> "All good" <> reset
-    else if view #loading state then
-      bold <> colored Ansi.Yellow <> "Loading...\n" <> reset <> err
-    else
-      "\n" <> err
+  content
+    | view #starting state =
+        bold <> colored Ansi.Yellow <> "Starting..." <> reset
+    | view #loading state =
+        bold <> colored Ansi.Yellow <> "Loading..." <> reset <> err
+    | err == mempty =
+        bold <> colored Ansi.Green <> "All good" <> reset
+    | otherwise =
+        err
 
 
 chooseCursor
