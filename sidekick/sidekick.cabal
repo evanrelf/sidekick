@@ -88,9 +88,9 @@ library
     , vty
   exposed-modules:
     Sidekick
-    Sidekick.FSNotify
     Sidekick.Options
     Sidekick.UI
+    Sidekick.Watch
 
 
 executable sidekick

@@ -5,10 +5,10 @@ module Sidekick (main) where
 import Sidekick.Options (Options (..))
 
 import qualified Brick.BChan as Brick
-import qualified Sidekick.FSNotify as FSNotify
 import qualified Sidekick.Ghci as Ghci
 import qualified Sidekick.Options as Options
 import qualified Sidekick.UI as UI
+import qualified Sidekick.Watch as Watch
 import qualified UnliftIO.Async as Async
 import qualified UnliftIO.Concurrent as Concurrent
 import qualified UnliftIO.MVar as MVar
@@ -31,7 +31,7 @@ main = do
             Brick.writeBChan uiChan (UI.NewText (out, err))
 
   racing_
-    [ FSNotify.start mvar directory
+    [ Watch.start mvar directory
     , UI.start uiChan
     , startGhci
     ]

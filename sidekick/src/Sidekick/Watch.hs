@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE QuasiQuotes #-}
 
-module Sidekick.FSNotify (start) where
+module Sidekick.Watch (start) where
 
 import Data.String.Interpolate (i)
 
