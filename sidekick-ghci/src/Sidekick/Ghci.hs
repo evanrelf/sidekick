@@ -14,9 +14,10 @@ module Sidekick.Ghci
   , withGhci
 
     -- * High-level operations
-    -- | High-level wrappers for 'send', 'receive', and 'receive_'. Calls to
-    -- 'send' are always followed by 'receive' or 'receive_' to ensure the GHCi
-    -- session is in a good state for the next command.
+    -- | High-level wrappers for 'send', 'receive', and 'receive_'. Functions
+    -- take a lock on the GHCi session to prevent concurrent access, and calls
+    -- to 'send' are always followed by 'receive' or 'receive_' to ensure the
+    -- GHCi session is in a good state for the next command.
   , run
   , run_
   , cancel

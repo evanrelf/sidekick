@@ -50,6 +50,9 @@ data Ghci s = Ghci
 
   , promptNumberTVar :: STM.TVar Integer
   -- ^ Mutable reference to last prompt number
+
+  , lock :: STM.TMVar ()
+  -- ^ Lock to prevent concurrent access to GHCi session
   }
 
 
@@ -88,6 +91,7 @@ withGhci command action = withRunInIO \unliftIO ->
       (Just stdinHandle, Just stdoutHandle, Just stderrHandle) -> do
         commandTVar <- liftIO $ STM.newTVarIO ""
         promptNumberTVar <- liftIO $ STM.newTVarIO 0
+        lock <- liftIO $ STM.newTMVarIO ()
 
         let ghci = Ghci
               { stdinHandle
@@ -96,6 +100,7 @@ withGhci command action = withRunInIO \unliftIO ->
               , processHandle
               , commandTVar
               , promptNumberTVar
+              , lock
               }
 
         liftIO $ IO.hSetBuffering stdinHandle IO.LineBuffering
@@ -131,7 +136,7 @@ run
   -- ^ GHCi command or Haskell expression
   -> m (Text, Text)
   -- ^ @stdout@ and @stderr@ from GHCi
-run ghci command = do
+run ghci command = liftIO $ withLock ghci do
   send ghci command
   receive ghci
 
@@ -144,7 +149,7 @@ run_
   -> Text
   -- ^ GHCi command or Haskell expression
   -> m ()
-run_ ghci command = do
+run_ ghci command = liftIO $ withLock ghci do
   send ghci command
   receive_ ghci
 
@@ -156,7 +161,8 @@ cancel
   => Ghci s
   -- ^ GHCi session handle
   -> m ()
-cancel ghci = liftIO $ Process.interruptProcessGroupOf (processHandle ghci)
+cancel ghci = liftIO $ withLock ghci do
+  Process.interruptProcessGroupOf (processHandle ghci)
 
 
 -- | Run a command in GHCi
@@ -250,6 +256,13 @@ interact ghci = liftIO do
         unless (Text.null out) $ Text.hPutStrLn IO.stdout out
       )
     & Streamly.drain
+
+
+withLock :: MonadUnliftIO m => Ghci s -> m a -> m a
+withLock Ghci{lock} action = withRunInIO \unliftIO -> do
+  let acquire = STM.atomically $ STM.takeTMVar lock
+  let release = STM.atomically $ STM.putTMVar lock ()
+  Exception.bracket_ acquire release (unliftIO action)
 
 
 separator :: Integer -> Text
