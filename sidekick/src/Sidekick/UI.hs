@@ -14,7 +14,8 @@ import qualified System.Console.ANSI as Ansi
 
 
 data State = State
-  { loading :: Bool
+  { starting :: Bool
+  , loading :: Bool
   , out :: Text
   , err :: Text
   } deriving stock Generic
@@ -47,7 +48,8 @@ start eventChannel = liftIO do
 
 initialState :: State
 initialState = State
-  { loading = True
+  { starting = True
+  , loading = True
   , out = ""
   , err = ""
   }
@@ -119,6 +121,7 @@ handleAppEvent state = \case
       state
         & set #out out
         & set #err err
+        & set #starting False
         & set #loading False
 
 
