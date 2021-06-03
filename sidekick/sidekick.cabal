@@ -56,14 +56,14 @@ common common
     -fshow-warning-groups
 
 
-common threaded-executable
+common executable
   ghc-options:
     -threaded
     -rtsopts
     -with-rtsopts=-N
 
 
-common streamly-optimizations
+common streamly
   ghc-options:
     -O2
     -fdicts-strict
@@ -74,7 +74,7 @@ common streamly-optimizations
 library
   import:
     , common
-    , streamly-optimizations
+    , streamly
   hs-source-dirs: src
   build-depends:
     , brick
@@ -96,8 +96,8 @@ library
 executable sidekick
   import:
     , common
-    , streamly-optimizations
-    , threaded-executable
+    , executable
+    , streamly
   build-depends: sidekick
   main-is: sidekick/Main.hs
 
@@ -105,7 +105,7 @@ executable sidekick
 test-suite test
   import:
     , common
-    , threaded-executable
+    , executable
   type: exitcode-stdio-1.0
   main-is: Main.hs
   hs-source-dirs: test
