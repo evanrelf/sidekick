@@ -1,5 +1,3 @@
-{-# LANGUAGE ScopedTypeVariables #-}
-
 module Sidekick.UI
   ( Event (..)
   , start
@@ -10,8 +8,6 @@ import Optics (set, view)
 import Prelude hiding (State, state)
 
 import qualified Brick
-import qualified Brick.Widgets.Border as Brick
-import qualified Brick.Widgets.Border.Style as Brick
 import qualified Brick.BChan as Brick
 import qualified Graphics.Vty as Vty
 
@@ -22,7 +18,7 @@ data State = State
   } deriving stock Generic
 
 
-newtype Event
+data Event
   = NewText (Text, Text)
 
 
@@ -111,16 +107,16 @@ handleAppEvent :: State -> Event -> Brick.EventM n (Brick.Next State)
 handleAppEvent state = \case
   NewText (out, err) ->
     Brick.continue do
-      state & set #out out
-            & set #err err
+      state
+        & set #out out
+        & set #err err
 
 
 handleVtyEvent :: State -> Vty.Event -> Brick.EventM n (Brick.Next State)
 handleVtyEvent state = \case
   -- Quit
-  Vty.EvKey key modifiers
-    | key `elem` [Vty.KEsc, Vty.KChar 'q'] -> Brick.halt state
-    | Vty.MCtrl `elem` modifiers && key == Vty.KChar 'c' -> Brick.halt state
+  Vty.EvKey key modifiers | isQuit key modifiers ->
+    Brick.halt state
 
   Vty.EvKey _key _modifiers ->
     Brick.continue state
@@ -142,6 +138,12 @@ handleVtyEvent state = \case
 
   Vty.EvGainedFocus ->
     Brick.continue state
+
+  where
+  isQuit key modifiers = or
+    [ key `elem` [Vty.KEsc, Vty.KChar 'q']
+    , Vty.MCtrl `elem` modifiers && key == Vty.KChar 'c'
+    ]
 
 
 startEvent :: State -> Brick.EventM n State

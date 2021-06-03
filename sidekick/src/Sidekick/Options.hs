@@ -1,5 +1,4 @@
 {-# LANGUAGE ApplicativeDo #-}
-{-# LANGUAGE NamedFieldPuns #-}
 
 module Sidekick.Options
   ( Options (..)

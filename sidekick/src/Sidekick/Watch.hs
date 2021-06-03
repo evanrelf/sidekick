@@ -1,21 +1,16 @@
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE QuasiQuotes #-}
 
 module Sidekick.Watch (start) where
-
-import Data.String.Interpolate (i)
 
 import qualified Streamly
 import qualified Streamly.FSNotify
 import qualified Streamly.Prelude as Streamly
-import qualified UnliftIO.MVar as MVar
 
 
-start :: Streamly.MonadAsync m => MVar () -> Maybe FilePath -> m ()
-start mvar maybeDirectory = do
-  let directory = fromMaybe "." maybeDirectory
+start :: Streamly.MonadAsync m => Maybe FilePath -> m ()
+start userDirectory = do
+  let directory = fromMaybe "." userDirectory
 
-  -- We only care about filesystem events concerning Haskell files
   let eventPredicate =
         Streamly.FSNotify.conj
           (Streamly.FSNotify.hasExtension "hs")
@@ -25,25 +20,19 @@ start mvar maybeDirectory = do
     Streamly.FSNotify.watchTree directory eventPredicate
 
   eventStream
-    & Streamly.trace (handleEvent mvar)
+    & Streamly.trace handleEvent
     & Streamly.drain
 
 
-handleEvent :: MonadIO m => MVar () -> Streamly.FSNotify.Event -> m ()
-handleEvent mvar = \case
-  Streamly.FSNotify.Added path time Streamly.FSNotify.NotDir -> do
-    -- putStrLn [i|#{time}: Added #{path}|]
-    _ <- MVar.tryPutMVar mvar ()
+handleEvent :: MonadIO m => Streamly.FSNotify.Event -> m ()
+handleEvent = \case
+  Streamly.FSNotify.Added _path _time Streamly.FSNotify.NotDir -> do
     pass
 
-  Streamly.FSNotify.Modified path time Streamly.FSNotify.NotDir -> do
-    -- putStrLn [i|#{time}: Modified #{path}|]
-    _ <- MVar.tryPutMVar mvar ()
+  Streamly.FSNotify.Modified _path _time Streamly.FSNotify.NotDir -> do
     pass
 
-  Streamly.FSNotify.Removed path time Streamly.FSNotify.NotDir -> do
-    -- putStrLn [i|#{time}: Removed #{path}|]
-    _ <- MVar.tryPutMVar mvar ()
+  Streamly.FSNotify.Removed _path _time Streamly.FSNotify.NotDir -> do
     pass
 
   _ ->
