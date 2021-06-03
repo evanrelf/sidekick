@@ -106,9 +106,13 @@ test-suite test
   import:
     , common
     , executable
+    , streamly
   type: exitcode-stdio-1.0
   main-is: Main.hs
   hs-source-dirs: test
   build-depends:
-    , hspec
+    , relude
     , sidekick
+    , tasty
+    , tasty-hunit
+    , unliftio
