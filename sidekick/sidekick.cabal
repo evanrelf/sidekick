@@ -99,7 +99,7 @@ executable sidekick
     , executable
     , streamly
   build-depends: sidekick
-  main-is: sidekick/Main.hs
+  main-is: src/Main.hs
 
 
 test-suite test
