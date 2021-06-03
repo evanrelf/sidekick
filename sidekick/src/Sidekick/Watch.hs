@@ -1,14 +1,31 @@
 {-# LANGUAGE FlexibleContexts #-}
 
-module Sidekick.Watch (start) where
+module Sidekick.Watch
+  ( Event (..)
+  , start
+  )
+where
+
+import UnliftIO (MonadUnliftIO)
 
 import qualified Streamly
 import qualified Streamly.FSNotify
 import qualified Streamly.Prelude as Streamly
 
 
-start :: Streamly.MonadAsync m => Maybe FilePath -> m ()
-start userDirectory = do
+data Event
+  = Added FilePath
+  | Modified FilePath
+  | Removed FilePath
+
+
+start
+  :: MonadUnliftIO m
+  => Streamly.MonadAsync m
+  => Maybe FilePath
+  -> (Event -> m ())
+  -> m ()
+start userDirectory handleEvent = do
   let directory = fromMaybe "." userDirectory
 
   let eventPredicate =
@@ -20,20 +37,21 @@ start userDirectory = do
     Streamly.FSNotify.watchTree directory eventPredicate
 
   eventStream
+    & Streamly.mapMaybe convertEvent
     & Streamly.trace handleEvent
     & Streamly.drain
 
 
-handleEvent :: MonadIO m => Streamly.FSNotify.Event -> m ()
-handleEvent = \case
-  Streamly.FSNotify.Added _path _time Streamly.FSNotify.NotDir -> do
-    pass
+convertEvent :: Streamly.FSNotify.Event -> Maybe Event
+convertEvent = \case
+  Streamly.FSNotify.Added path _time Streamly.FSNotify.NotDir ->
+    Just (Added path)
 
-  Streamly.FSNotify.Modified _path _time Streamly.FSNotify.NotDir -> do
-    pass
+  Streamly.FSNotify.Modified path _time Streamly.FSNotify.NotDir ->
+    Just (Modified path)
 
-  Streamly.FSNotify.Removed _path _time Streamly.FSNotify.NotDir -> do
-    pass
+  Streamly.FSNotify.Removed path _time Streamly.FSNotify.NotDir ->
+    Just (Removed path)
 
   _ ->
-    pass
+    Nothing

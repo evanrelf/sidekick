@@ -10,16 +10,19 @@ import Prelude hiding (State, state)
 import qualified Brick
 import qualified Brick.BChan as Brick
 import qualified Graphics.Vty as Vty
+import qualified System.Console.ANSI as Ansi
 
 
 data State = State
-  { out :: Text
+  { loading :: Bool
+  , out :: Text
   , err :: Text
   } deriving stock Generic
 
 
 data Event
-  = NewText (Text, Text)
+  = Loading
+  | NewText (Text, Text)
 
 
 type Name = ()
@@ -44,8 +47,9 @@ start eventChannel = liftIO do
 
 initialState :: State
 initialState = State
-  { out = "Loading stdout..."
-  , err = "Loading stderr..."
+  { loading = True
+  , out = ""
+  , err = ""
   }
 
 
@@ -61,21 +65,21 @@ application = Brick.App
 
 draw :: State -> [Brick.Widget n]
 draw state = one do
-  Brick.vBox
-    [ Brick.txt ("OUT: " <> view #out state)
-        & Brick.vLimitPercent 50
-        & Brick.padBottom Brick.Max
-        & Brick.padRight Brick.Max
-        -- & Brick.borderWithLabel (Brick.txt "stdout")
-        -- & Brick.withBorderStyle (Brick.borderStyleFromChar ' ')
-
-    , Brick.txt ("ERR: " <> view #err state)
-        & Brick.vLimitPercent 50
-        & Brick.padBottom Brick.Max
-        & Brick.padRight Brick.Max
-        -- & Brick.borderWithLabel (Brick.txt "stderr")
-        -- & Brick.withBorderStyle (Brick.borderStyleFromChar ' ')
-    ]
+  Brick.txt content
+    & Brick.padBottom Brick.Max
+    & Brick.padRight Brick.Max
+  where
+  err = view #err state
+  colored color = toText $ Ansi.setSGRCode [Ansi.SetColor Ansi.Foreground Ansi.Dull color]
+  bold = toText $ Ansi.setSGRCode [Ansi.SetConsoleIntensity Ansi.BoldIntensity]
+  reset = toText $ Ansi.setSGRCode [Ansi.Reset]
+  content =
+    if err == mempty then
+      bold <> colored Ansi.Green <> "All good" <> reset
+    else if view #loading state then
+      bold <> colored Ansi.Yellow <> "Loading...\n" <> reset <> err
+    else
+      "\n" <> err
 
 
 chooseCursor
@@ -105,11 +109,17 @@ handleEvent state = \case
 
 handleAppEvent :: State -> Event -> Brick.EventM n (Brick.Next State)
 handleAppEvent state = \case
+  Loading ->
+    Brick.continue do
+      state
+        & set #loading True
+
   NewText (out, err) ->
     Brick.continue do
       state
         & set #out out
         & set #err err
+        & set #loading False
 
 
 handleVtyEvent :: State -> Vty.Event -> Brick.EventM n (Brick.Next State)

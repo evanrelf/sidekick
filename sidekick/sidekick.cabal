@@ -77,6 +77,7 @@ library
     , streamly
   hs-source-dirs: src
   build-depends:
+    , ansi-terminal
     , brick
     , optics
     , optparse-applicative
