@@ -13,11 +13,25 @@ module Sidekick.Ghci
     -- * Start GHCi session
   , withGhci
 
-    -- * Operations
+    -- * High-level operations
+    -- | High-level wrappers for 'send', 'receive', and 'receive_'. Calls to
+    -- 'send' are always followed by 'receive' or 'receive_' to ensure the GHCi
+    -- session is in a good state for the next command.
   , run
   , run_
   , cancel
+
+    -- * Low-level operations
+    -- | Low-level primitives for more direct manipulation of the GHCi session,
+    -- providing no checks or guarantees that you maintain a good state.
+  , send
+  , receive
+  , receive_
+
+    -- * Debugging
+  , interact
   )
 where
 
 import Sidekick.Ghci.Internal
+import Prelude hiding (interact)
