@@ -19,6 +19,7 @@ module Sidekick.Ghci
     -- to 'send' are always followed by 'receive' or 'receive_' to ensure the
     -- GHCi session is in a good state for the next command.
   , run
+  , runStreaming
   , run_
   , cancel
 

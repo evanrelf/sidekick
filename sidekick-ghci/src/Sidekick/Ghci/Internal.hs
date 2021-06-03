@@ -143,6 +143,22 @@ run ghci command = liftIO $ withLock ghci do
   receive ghci
 
 
+-- | Run a command in GHCi, streaming its output
+runStreaming
+  :: MonadUnliftIO m
+  => Streamly.MonadAsync m
+  => Streamly.IsStream t
+  => Ghci s
+  -- ^ GHCi session handle
+  -> Text
+  -- ^ GHCi command or Haskell expression
+  -> m (t m Text, t m Text)
+  -- ^ @stdout@ and @stderr@ streams from GHCi
+runStreaming ghci command = withLock ghci do
+  send ghci command
+  receiveStreaming ghci
+
+
 -- | Run a command in GHCi, ignoring its output
 run_
   :: MonadIO m
