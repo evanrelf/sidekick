@@ -4,11 +4,21 @@ let
   overrideHaskellPackages = attrs:
     import ../lib/override-haskell-packages.nix attrs pkgsFinal pkgsPrev;
 
+  dereference = path:
+    let
+      dirname = builtins.dirOf path;
+      basename = builtins.baseNameOf path;
+    in
+    pkgsPrev.runCommandLocal "dereference-${basename}" { } ''
+      cd ${dirname}
+      ${pkgsFinal.coreutils}/bin/cp -r --dereference ${basename} $out
+    '';
+
 in
 overrideHaskellPackages {
   packages = {
-    "sidekick" = ../../sidekick;
-    "sidekick-ghci" = ../../sidekick-ghci;
+    "sidekick" = dereference ../../sidekick;
+    "sidekick-ghci" = dereference ../../sidekick-ghci;
 
     "optics" = "0.4";
     "optics-core" = "0.4";
