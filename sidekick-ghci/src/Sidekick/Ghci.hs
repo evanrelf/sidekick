@@ -21,7 +21,6 @@ module Sidekick.Ghci
   , run
   , runStreaming
   , run_
-  , cancel
 
     -- * Low-level operations
     -- | Low-level primitives for more direct manipulation of the GHCi session,
@@ -30,6 +29,7 @@ module Sidekick.Ghci
   , receive
   , receiveStreaming
   , receive_
+  , cancel
 
     -- * Debugging
   , interact

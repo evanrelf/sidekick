@@ -170,17 +170,6 @@ run_ ghci command = liftIO $ withLock ghci do
   receive_ ghci
 
 
--- | Send Ctrl-C (@SIGINT@) to GHCi session. Useful for interrupting
--- long-running commands.
-cancel
-  :: MonadIO m
-  => Ghci s
-  -- ^ GHCi session handle
-  -> m ()
-cancel ghci = liftIO $ withLock ghci do
-  Process.interruptProcessGroupOf (processHandle ghci)
-
-
 -- | Run a command in GHCi.
 send
   :: MonadIO m
@@ -272,6 +261,17 @@ receive_ ghci = liftIO do
   Async.concurrently_
     do consume (stdoutHandle ghci)
     do consume (stderrHandle ghci)
+
+
+-- | Send Ctrl-C (@SIGINT@) to GHCi session. Useful for interrupting
+-- long-running commands.
+cancel
+  :: MonadIO m
+  => Ghci s
+  -- ^ GHCi session handle
+  -> m ()
+cancel ghci = liftIO $ withLock ghci do
+  Process.interruptProcessGroupOf (processHandle ghci)
 
 
 -- | Interact with the GHCi session directly via @stdin@ and @stdout@ +
