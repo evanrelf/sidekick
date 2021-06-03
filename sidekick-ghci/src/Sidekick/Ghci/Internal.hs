@@ -33,32 +33,32 @@ import qualified System.IO as IO
 import qualified System.Process as Process
 
 
--- | GHCi session handle
+-- | GHCi session handle.
 data Ghci s = Ghci
   { stdinHandle :: Handle
-  -- ^ Handle for GHCi session's @stdin@ stream
+    -- ^ Handle for GHCi session's @stdin@ stream
 
   , stdoutHandle :: Handle
-  -- ^ Handle for GHCi session's @stderr@ stream
+    -- ^ Handle for GHCi session's @stderr@ stream
 
   , stderrHandle :: Handle
-  -- ^ Handle for GHCi session's @stdin@ stream
+    -- ^ Handle for GHCi session's @stdin@ stream
 
   , processHandle :: Process.ProcessHandle
-  -- ^ Process handle for GHCi session
+    -- ^ Process handle for GHCi session
 
   , commandTVar :: STM.TVar Text
-  -- ^ Mutable reference to last executed command
+    -- ^ Mutable reference to last executed command
 
   , promptNumberTVar :: STM.TVar Integer
-  -- ^ Mutable reference to last prompt number
+    -- ^ Mutable reference to last prompt number
 
   , lock :: STM.TMVar ()
-  -- ^ Lock to prevent concurrent access to GHCi session
+    -- ^ Lock to prevent concurrent access to GHCi session
   }
 
 
--- | Run operations on a live GHCi session
+-- | Run operations on a live GHCi session.
 --
 -- >>> withGhci "ghci" $ \ghci -> run ghci ":type fmap"
 -- ("fmap :: Functor f => (a -> b) -> f a -> f b","")
@@ -129,7 +129,7 @@ withGhci command action = withRunInIO \unliftIO ->
         liftIO $ Exception.throwIO (userError "Failed to create GHCi handles")
 
 
--- | Run a command in GHCi, collecting its output
+-- | Run a command in GHCi, collecting its output.
 run
   :: MonadIO m
   => Ghci s
@@ -143,11 +143,9 @@ run ghci command = liftIO $ withLock ghci do
   receive ghci
 
 
--- | Run a command in GHCi, streaming its output
+-- | Run a command in GHCi, streaming its output line-by-line.
 runStreaming
-  :: MonadUnliftIO m
-  => Streamly.MonadAsync m
-  => Streamly.IsStream t
+  :: (MonadUnliftIO m, Streamly.MonadAsync m, Streamly.IsStream t)
   => Ghci s
   -- ^ GHCi session handle
   -> Text
@@ -159,7 +157,7 @@ runStreaming ghci command = withLock ghci do
   receiveStreaming ghci
 
 
--- | Run a command in GHCi, ignoring its output
+-- | Run a command in GHCi, ignoring its output.
 run_
   :: MonadIO m
   => Ghci s
@@ -183,7 +181,7 @@ cancel ghci = liftIO $ withLock ghci do
   Process.interruptProcessGroupOf (processHandle ghci)
 
 
--- | Run a command in GHCi
+-- | Run a command in GHCi.
 send
   :: MonadIO m
   => Ghci s
@@ -208,7 +206,7 @@ send ghci command = liftIO do
       ("SIDEKICK.hPutStrLn SIDEKICK.stderr \"\\n" <> separator n <> "\"")
 
 
--- | Collect output from the previously run command
+-- | Collect output from the previously run command.
 receive
   :: MonadIO m
   => Ghci s
@@ -230,11 +228,10 @@ receive ghci = liftIO do
     do consume stderrStream
 
 
--- | Stream output from the previously run command.
+-- | Stream output line-by-line from the previously run command.
 receiveStreaming
   :: forall m t s
-   . Streamly.MonadAsync m
-  => Streamly.IsStream t
+   . (Streamly.MonadAsync m, Streamly.IsStream t)
   => Ghci s
   -- ^ GHCi session handle
   -> m (t m Text, t m Text)
@@ -257,7 +254,7 @@ receiveStreaming ghci = liftIO do
     )
 
 
--- | Ignore output from the previously run command
+-- | Ignore output from the previously run command.
 receive_
   :: MonadIO m
   => Ghci s
@@ -277,8 +274,8 @@ receive_ ghci = liftIO do
     do consume (stderrHandle ghci)
 
 
--- | Interact with the GHCi session directly via @stdin@ and @stdout@. Useful
--- for debugging and experimenting.
+-- | Interact with the GHCi session directly via @stdin@ and @stdout@ +
+-- @stderr@. Useful for debugging and experimenting.
 --
 -- >>> withGhci "ghci" interact
 -- 1 + 1
