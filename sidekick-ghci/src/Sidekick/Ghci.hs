@@ -27,14 +27,11 @@ module Sidekick.Ghci
     -- state.
   , send
   , receive
+  , receiveStreaming
   , receive_
   , cancel
 
-    -- ** Streaming
-  , runStreaming
-  , receiveStreaming
-
-    -- ** Debugging
+    -- * Debugging
   , interact
   )
 where

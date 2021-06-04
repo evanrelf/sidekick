@@ -131,20 +131,6 @@ withGhci command action = withRunInIO \unliftIO ->
         Exception.throwIO (userError "Failed to create GHCi handles")
 
 
--- | Run a command in GHCi, streaming its output line-by-line.
-runStreaming
-  :: Streamly.MonadAsync m
-  => Ghci s
-  -- ^ GHCi session handle
-  -> Text
-  -- ^ GHCi command or Haskell expression
-  -> m (Streamly.SerialT m Text, Streamly.SerialT m Text)
-  -- ^ @stdout@ and @stderr@ streams from GHCi
-runStreaming ghci command = do
-  send ghci command
-  receiveStreaming ghci
-
-
 -- | Run a command in GHCi, collecting its output.
 run
   :: MonadIO m
