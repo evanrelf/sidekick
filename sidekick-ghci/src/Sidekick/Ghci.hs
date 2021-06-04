@@ -13,25 +13,28 @@ module Sidekick.Ghci
     -- * Start GHCi session
   , withGhci
 
-    -- * High-level operations
-    -- | High-level wrappers for 'send' and 'receive'. Functions take a lock on
-    -- the GHCi session to prevent concurrent access, and calls to 'send' are
-    -- always followed by 'receive' to ensure the GHCi session is in a good
-    -- state for the next command.
+    -- * Safe operations
+    -- | Higher-level, safe wrappers around 'send' and 'receive'. Functions take
+    -- a lock on the GHCi session to prevent concurrent access, and calls to
+    -- 'send' are always followed by 'receive' to ensure the GHCi session is in
+    -- a good state for the next command.
   , run
-  , runStreaming
   , run_
 
-    -- * Low-level operations
-    -- | Low-level primitives for more direct manipulation of the GHCi session,
-    -- providing no checks or guarantees that you maintain a good state.
+    -- * Unsafe operations
+    -- | Lower-level primitives for more direct manipulation of the GHCi
+    -- session, providing no checks or guarantees that you maintain a good
+    -- state.
   , send
   , receive
-  , receiveStreaming
   , receive_
   , cancel
 
-    -- * Debugging
+    -- ** Streaming
+  , runStreaming
+  , receiveStreaming
+
+    -- ** Debugging
   , interact
   )
 where

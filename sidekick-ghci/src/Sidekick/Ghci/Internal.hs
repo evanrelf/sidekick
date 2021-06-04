@@ -129,6 +129,20 @@ withGhci command action = withRunInIO \unliftIO ->
         liftIO $ Exception.throwIO (userError "Failed to create GHCi handles")
 
 
+-- | Run a command in GHCi, streaming its output line-by-line.
+runStreaming
+  :: Streamly.MonadAsync m
+  => Ghci s
+  -- ^ GHCi session handle
+  -> Text
+  -- ^ GHCi command or Haskell expression
+  -> m (Streamly.SerialT m Text, Streamly.SerialT m Text)
+  -- ^ @stdout@ and @stderr@ streams from GHCi
+runStreaming ghci command = do
+  send ghci command
+  receiveStreaming ghci
+
+
 -- | Run a command in GHCi, collecting its output.
 run
   :: MonadIO m
@@ -141,20 +155,6 @@ run
 run ghci command = liftIO $ withLock ghci do
   send ghci command
   receive ghci
-
-
--- | Run a command in GHCi, streaming its output line-by-line.
-runStreaming
-  :: (MonadUnliftIO m, Streamly.MonadAsync m)
-  => Ghci s
-  -- ^ GHCi session handle
-  -> Text
-  -- ^ GHCi command or Haskell expression
-  -> m (Streamly.SerialT m Text, Streamly.SerialT m Text)
-  -- ^ @stdout@ and @stderr@ streams from GHCi
-runStreaming ghci command = withLock ghci do
-  send ghci command
-  receiveStreaming ghci
 
 
 -- | Run a command in GHCi, ignoring its output.
@@ -195,28 +195,6 @@ send ghci command = liftIO do
       ("SIDEKICK.hPutStrLn SIDEKICK.stderr \"\\n" <> separator n <> "\"")
 
 
--- | Collect output from the previously run command.
-receive
-  :: MonadIO m
-  => Ghci s
-  -- ^ GHCi session handle
-  -> m (Text, Text)
-  -- ^ @stdout@ and @stderr@ from GHCi
-receive ghci = liftIO do
-  (stdoutStream, stderrStream) <- receiveStreaming ghci
-
-  let consume :: Streamly.SerialT IO Text -> IO Text
-      consume stream =
-        stream
-          & Streamly.map (`Text.snoc` '\n')
-          & Streamly.foldl' (<>) mempty
-          & fmap Text.stripEnd
-
-  Async.concurrently
-    do consume stdoutStream
-    do consume stderrStream
-
-
 -- | Stream output line-by-line from the previously run command.
 receiveStreaming
   :: forall m s
@@ -241,6 +219,28 @@ receiveStreaming ghci = liftIO do
     ( stream (stdoutHandle ghci)
     , stream (stderrHandle ghci)
     )
+
+
+-- | Collect output from the previously run command.
+receive
+  :: MonadIO m
+  => Ghci s
+  -- ^ GHCi session handle
+  -> m (Text, Text)
+  -- ^ @stdout@ and @stderr@ from GHCi
+receive ghci = liftIO do
+  (stdoutStream, stderrStream) <- receiveStreaming ghci
+
+  let consume :: Streamly.SerialT IO Text -> IO Text
+      consume stream =
+        stream
+          & Streamly.map (`Text.snoc` '\n')
+          & Streamly.foldl' (<>) mempty
+          & fmap Text.stripEnd
+
+  Async.concurrently
+    do consume stdoutStream
+    do consume stderrStream
 
 
 -- | Ignore output from the previously run command.
