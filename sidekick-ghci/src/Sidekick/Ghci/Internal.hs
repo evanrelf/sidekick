@@ -294,6 +294,8 @@ interact ghci = liftIO do
     & Streamly.drain
 
 
+-- | Take lock on GHCi session while performing action, preventing other actions
+-- (which respect the lock) from accessing it concurrently.
 withLock :: MonadUnliftIO m => Ghci s -> m a -> m a
 withLock Ghci{lockTMVar} action = withRunInIO \unliftIO -> do
   let acquire = STM.atomically $ STM.takeTMVar lockTMVar
@@ -301,5 +303,6 @@ withLock Ghci{lockTMVar} action = withRunInIO \unliftIO -> do
   Exception.bracket_ acquire release (unliftIO action)
 
 
+-- | Prompt separator text
 separator :: Integer -> Text
 separator n = Text.pack ("__sidekick__" <> show n <> "__")
