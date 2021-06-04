@@ -52,7 +52,7 @@ data Ghci s = Ghci
   , promptNumberTVar :: STM.TVar Integer
     -- ^ Mutable reference to last prompt number
 
-  , lock :: STM.TMVar ()
+  , lockTMVar :: STM.TMVar ()
     -- ^ Lock to prevent concurrent access to GHCi session
   }
 
@@ -93,7 +93,7 @@ withGhci command action = withRunInIO \unliftIO ->
       (Just stdinHandle, Just stdoutHandle, Just stderrHandle) -> do
         commandTVar <- STM.newTVarIO ""
         promptNumberTVar <- STM.newTVarIO 0
-        lock <- STM.newTMVarIO ()
+        lockTMVar <- STM.newTMVarIO ()
 
         let ghci = Ghci
               { stdinHandle
@@ -102,7 +102,7 @@ withGhci command action = withRunInIO \unliftIO ->
               , processHandle
               , commandTVar
               , promptNumberTVar
-              , lock
+              , lockTMVar
               }
 
         IO.hSetBuffering stdinHandle IO.LineBuffering
@@ -295,9 +295,9 @@ interact ghci = liftIO do
 
 
 withLock :: MonadUnliftIO m => Ghci s -> m a -> m a
-withLock Ghci{lock} action = withRunInIO \unliftIO -> do
-  let acquire = STM.atomically $ STM.takeTMVar lock
-  let release = STM.atomically $ STM.putTMVar lock ()
+withLock Ghci{lockTMVar} action = withRunInIO \unliftIO -> do
+  let acquire = STM.atomically $ STM.takeTMVar lockTMVar
+  let release = STM.atomically $ STM.putTMVar lockTMVar ()
   Exception.bracket_ acquire release (unliftIO action)
 
 
