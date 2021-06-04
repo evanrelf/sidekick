@@ -3,7 +3,6 @@
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 
 -- |
 -- Module:     Sidekick.Ghci.Internal
@@ -63,15 +62,16 @@ data Ghci s = Ghci
 -- >>> withGhci "ghci" $ \ghci -> run ghci ":type fmap"
 -- ("fmap :: Functor f => (a -> b) -> f a -> f b","")
 withGhci
-  :: forall m a
-   . MonadUnliftIO m
+  :: MonadUnliftIO m
   => Text
   -- ^ Command to start GHCi session (e.g. @ghci@ or @cabal repl@)
   -> (forall s. Ghci s -> m a)
   -- ^ Operations using the GHCi session
   -> m a
 withGhci command action = withRunInIO \unliftIO ->
-  Process.withCreateProcess processConfig \i o e p -> unliftIO $ setup i o e p
+  Process.withCreateProcess processConfig \i o e p -> do
+    ghci <- setup i o e p
+    unliftIO $ action ghci
   where
   processConfig :: Process.CreateProcess
   processConfig =
@@ -87,13 +87,13 @@ withGhci command action = withRunInIO \unliftIO ->
     -> Maybe Handle
     -> Maybe Handle
     -> Process.ProcessHandle
-    -> m a
+    -> IO (Ghci s)
   setup i o e processHandle =
     case (i, o, e) of
       (Just stdinHandle, Just stdoutHandle, Just stderrHandle) -> do
-        commandTVar <- liftIO $ STM.newTVarIO ""
-        promptNumberTVar <- liftIO $ STM.newTVarIO 0
-        lock <- liftIO $ STM.newTMVarIO ()
+        commandTVar <- STM.newTVarIO ""
+        promptNumberTVar <- STM.newTVarIO 0
+        lock <- STM.newTMVarIO ()
 
         let ghci = Ghci
               { stdinHandle
@@ -105,13 +105,13 @@ withGhci command action = withRunInIO \unliftIO ->
               , lock
               }
 
-        liftIO $ IO.hSetBuffering stdinHandle IO.LineBuffering
-        liftIO $ IO.hSetBuffering stdoutHandle IO.LineBuffering
-        liftIO $ IO.hSetBuffering stderrHandle IO.LineBuffering
+        IO.hSetBuffering stdinHandle IO.LineBuffering
+        IO.hSetBuffering stdoutHandle IO.LineBuffering
+        IO.hSetBuffering stderrHandle IO.LineBuffering
 
         -- Disable prompt
-        liftIO $ Text.hPutStrLn stdinHandle ":set prompt \"\""
-        liftIO $ Text.hPutStrLn stdinHandle ":set prompt-cont \"\""
+        Text.hPutStrLn stdinHandle ":set prompt \"\""
+        Text.hPutStrLn stdinHandle ":set prompt-cont \"\""
 
         -- Import 'System.IO' for 'hPutStrLn' and friends, and print initial
         -- separator
@@ -123,10 +123,10 @@ withGhci command action = withRunInIO \unliftIO ->
         -- Disable settings that produce ugly output
         run_ ghci ":unset +t +s"
 
-        action ghci
+        pure ghci
 
       _ ->
-        liftIO $ Exception.throwIO (userError "Failed to create GHCi handles")
+        Exception.throwIO (userError "Failed to create GHCi handles")
 
 
 -- | Run a command in GHCi, streaming its output line-by-line.
@@ -197,8 +197,7 @@ send ghci command = liftIO do
 
 -- | Stream output line-by-line from the previously run command.
 receiveStreaming
-  :: forall m s
-   . Streamly.MonadAsync m
+  :: Streamly.MonadAsync m
   => Ghci s
   -- ^ GHCi session handle
   -> m (Streamly.SerialT m Text, Streamly.SerialT m Text)
@@ -209,7 +208,7 @@ receiveStreaming ghci = liftIO do
     command <- STM.readTVar (commandTVar ghci)
     pure (promptNumber, command)
 
-  let stream :: Handle -> Streamly.SerialT m Text
+  let stream :: Streamly.MonadAsync m => Handle -> Streamly.SerialT m Text
       stream handle =
         Streamly.repeatM (liftIO $ Text.hGetLine handle)
           & Streamly.takeWhile (/= separator n)
