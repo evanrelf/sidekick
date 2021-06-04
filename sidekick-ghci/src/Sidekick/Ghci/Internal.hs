@@ -257,8 +257,7 @@ cancel
   => Ghci s
   -- ^ GHCi session handle
   -> m ()
-cancel ghci = liftIO $ withLock ghci do
-  Process.interruptProcessGroupOf (processHandle ghci)
+cancel ghci = liftIO $ Process.interruptProcessGroupOf (processHandle ghci)
 
 
 -- | Interact with the GHCi session directly via @stdin@ and @stdout@ +
