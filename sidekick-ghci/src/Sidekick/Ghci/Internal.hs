@@ -145,12 +145,12 @@ run ghci command = liftIO $ withLock ghci do
 
 -- | Run a command in GHCi, streaming its output line-by-line.
 runStreaming
-  :: (MonadUnliftIO m, Streamly.MonadAsync m, Streamly.IsStream t)
+  :: (MonadUnliftIO m, Streamly.MonadAsync m)
   => Ghci s
   -- ^ GHCi session handle
   -> Text
   -- ^ GHCi command or Haskell expression
-  -> m (t m Text, t m Text)
+  -> m (Streamly.SerialT m Text, Streamly.SerialT m Text)
   -- ^ @stdout@ and @stderr@ streams from GHCi
 runStreaming ghci command = withLock ghci do
   send ghci command
@@ -219,11 +219,11 @@ receive ghci = liftIO do
 
 -- | Stream output line-by-line from the previously run command.
 receiveStreaming
-  :: forall m t s
-   . (Streamly.MonadAsync m, Streamly.IsStream t)
+  :: forall m s
+   . Streamly.MonadAsync m
   => Ghci s
   -- ^ GHCi session handle
-  -> m (t m Text, t m Text)
+  -> m (Streamly.SerialT m Text, Streamly.SerialT m Text)
   -- ^ @stdout@ and @stderr@ streams from GHCi
 receiveStreaming ghci = liftIO do
   (n, command) <- STM.atomically do
@@ -231,7 +231,7 @@ receiveStreaming ghci = liftIO do
     command <- STM.readTVar (commandTVar ghci)
     pure (promptNumber, command)
 
-  let stream :: Handle -> t m Text
+  let stream :: Handle -> Streamly.SerialT m Text
       stream handle =
         Streamly.repeatM (liftIO $ Text.hGetLine handle)
           & Streamly.takeWhile (/= separator n)
