@@ -4,6 +4,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
 
+{-# OPTIONS_HADDOCK not-home #-}
+
 -- |
 -- Module:     Sidekick.Ghci.Internal
 -- Stability:  experimental
