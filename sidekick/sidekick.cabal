@@ -79,6 +79,7 @@ library
   build-depends:
     , ansi-terminal
     , brick
+    , megaparsec
     , optics
     , optparse-applicative
     , sidekick-ghci
@@ -91,6 +92,7 @@ library
   exposed-modules:
     Sidekick
     Sidekick.Options
+    Sidekick.Parsers
     Sidekick.UI
     Sidekick.Watch
 
