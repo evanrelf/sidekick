@@ -4,26 +4,28 @@ module Sidekick.UI
   )
 where
 
-import Optics (set, view)
+import Optics (over, set, view)
 import Prelude hiding (State, state)
 
 import qualified Brick
 import qualified Brick.BChan as Brick
+import qualified Brick.Widgets.Border as Brick
+import qualified Data.Text as Text
 import qualified Graphics.Vty as Vty
 import qualified System.Console.ANSI as Ansi
 
 
 data State = State
-  { starting :: Bool
-  , loading :: Bool
+  { loading :: Bool
   , out :: Text
   , err :: Text
   } deriving stock Generic
 
 
 data Event
-  = Loading
-  | NewText (Text, Text)
+  = Loading Bool
+  | ModifyOut (Text -> Text)
+  | ModifyErr (Text -> Text)
 
 
 type Name = ()
@@ -48,8 +50,7 @@ start eventChannel = liftIO do
 
 initialState :: State
 initialState = State
-  { starting = True
-  , loading = True
+  { loading = True
   , out = ""
   , err = ""
   }
@@ -67,17 +68,24 @@ application = Brick.App
 
 draw :: State -> [Brick.Widget n]
 draw state = one do
-  Brick.txt content
-    & Brick.padBottom Brick.Max
-    & Brick.padRight Brick.Max
+  Brick.vBox $ catMaybes
+    [ Just $ Brick.txt content
+        & Brick.padBottom Brick.Max
+        & Brick.padRight Brick.Max
+
+    , if out == mempty then Nothing else Just Brick.hBorder
+
+    , Just $ Brick.txt out
+        & Brick.vLimitPercent 50
+        & Brick.padRight Brick.Max
+    ]
   where
+  out = Text.strip (view #out state)
   err = view #err state
   colored color = toText $ Ansi.setSGRCode [Ansi.SetColor Ansi.Foreground Ansi.Dull color]
   bold = toText $ Ansi.setSGRCode [Ansi.SetConsoleIntensity Ansi.BoldIntensity]
   reset = toText $ Ansi.setSGRCode [Ansi.Reset]
   content
-    | view #starting state =
-        bold <> colored Ansi.Yellow <> "Starting..." <> reset
     | view #loading state =
         bold <> colored Ansi.Yellow <> "Loading..." <> reset <> err
     | err == mempty =
@@ -113,18 +121,18 @@ handleEvent state = \case
 
 handleAppEvent :: State -> Event -> Brick.EventM n (Brick.Next State)
 handleAppEvent state = \case
-  Loading ->
-    Brick.continue do
-      state
-        & set #loading True
+  Loading loading ->
+    Brick.continue (set #loading loading state)
 
-  NewText (out, err) ->
+  ModifyOut f ->
     Brick.continue do
       state
-        & set #out out
-        & set #err err
-        & set #starting False
-        & set #loading False
+        & over #out f
+
+  ModifyErr f ->
+    Brick.continue do
+      state
+        & over #err f
 
 
 handleVtyEvent :: State -> Vty.Event -> Brick.EventM n (Brick.Next State)
