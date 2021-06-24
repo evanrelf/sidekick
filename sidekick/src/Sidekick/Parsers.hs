@@ -74,7 +74,18 @@ parseMessage = asum
 
 -- [1 of 2] Compiling GHCi             ( GHCi.hs, interpreted )
 parseLoadingMessage :: Parser LoadingMessage
-parseLoadingMessage = undefined
+parseLoadingMessage = do
+  _ <- Megaparsec.char '['
+  _ <- Megaparsec.takeWhileP Nothing (/= ']')
+  _ <- Megaparsec.char ']'
+  _ <- Megaparsec.string " Compiling "
+  moduleName <- Megaparsec.takeWhileP Nothing (/= ' ')
+  Megaparsec.hspace1
+  _ <- Megaparsec.string "( "
+  file <- toString <$> Megaparsec.takeWhileP Nothing (/= ',')
+  _ <- Megaparsec.takeWhileP Nothing (/= ')')
+  _ <- Megaparsec.char ')'
+  pure LoadingMessage{moduleName, file}
 
 
 parseDiagnosticMessage :: Parser DiagnosticMessage
