@@ -1,4 +1,5 @@
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE TypeFamilies #-}
 
 -- TODO: Test parsers
 
@@ -20,6 +21,8 @@ module Sidekick.Parsers
   )
 where
 
+import Relude.Extra.Tuple (dup)
+import Relude.Unsafe (read)
 import Prelude hiding (cycle)
 
 import qualified Data.Char as Char
@@ -110,7 +113,19 @@ parseDiagnosticMessage = asum
   ]
   where
   -- GHCi.hs:81:1: Warning: Defined but not used: `foo'
-  normal = undefined
+  normal = do
+    location <- do
+      file <- toString <$> Megaparsec.takeWhileP Nothing (/= ':')
+      _ <- Megaparsec.char ':'
+      (spanBegin, spanEnd) <- parsePositions
+      _ <- Megaparsec.char ':'
+      pure $ Just Location{file, spanBegin, spanEnd}
+    severity <-
+      Megaparsec.optional (Megaparsec.string "Warning: ") <&> \case
+        Just _ -> Warning
+        Nothing -> Error
+    message <- takeRestLine
+    pure DiagnosticMessage{severity, location, message}
 
   -- <no location info>: can't find file: FILENAME
   cantFindFile = undefined
@@ -127,7 +142,7 @@ parseDiagnosticMessage = asum
 parseLoadConfigMessage :: Parser LoadConfigMessage
 parseLoadConfigMessage = do
   _ <- Megaparsec.string "Loaded GHCi configuration from "
-  path <- toString <$> Megaparsec.takeWhile1P Nothing (/= '\n')
+  path <- toString <$> takeRestLine
   pure LoadConfigMessage{path}
 
 
@@ -135,7 +150,7 @@ parseCwd :: Parser FilePath
 parseCwd = do
   _ <- Megaparsec.string "current working directory:"
   Megaparsec.space1
-  cwd <- Megaparsec.takeWhile1P Nothing (/= '\n')
+  cwd <- takeRestLine
   pure (Text.unpack cwd)
 
 
@@ -153,3 +168,51 @@ parseModule = do
   _ <- Megaparsec.takeWhile1P Nothing (/= ')')
   _ <- Megaparsec.char ')'
   pure (moduleName, Text.unpack modulePath)
+
+
+-- 1:2
+-- 1:2-4
+-- (1,2)-(3,4)
+parsePositions :: Parser (Position, Position)
+parsePositions = point <|> singleLine <|> multiLine
+  where
+  point = do
+    line <- parseNatural
+    _ <- Megaparsec.char ':'
+    column <- parseNatural
+    pure (dup Position{line, column})
+
+  singleLine = do
+    line <- parseNatural
+    _ <- Megaparsec.char ':'
+    columnBegin <- parseNatural
+    _ <- Megaparsec.char '-'
+    columnEnd <- parseNatural
+    pure
+      ( Position{line, column = columnBegin}
+      , Position{line, column = columnEnd}
+      )
+
+  multiLine = do
+    (lineBegin, columnBegin) <- parseNaturalPair
+    (lineEnd, columnEnd) <- parseNaturalPair
+    pure
+      ( Position{line = lineBegin, column = columnBegin}
+      , Position{line = lineEnd, column = columnEnd}
+      )
+
+  parseNatural = read . toString <$> Megaparsec.some Megaparsec.digitChar
+
+  parseNaturalPair =
+    Megaparsec.between (Megaparsec.char '(') (Megaparsec.char ')') do
+      x <- parseNatural
+      _ <- Megaparsec.char ','
+      y <- parseNatural
+      pure (x, y)
+
+
+takeRestLine
+  :: Megaparsec.MonadParsec e s m
+  => Megaparsec.Token s ~ Char
+  => m (Megaparsec.Tokens s)
+takeRestLine = Megaparsec.takeWhileP Nothing (/= '\n')
