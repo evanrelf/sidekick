@@ -18,6 +18,8 @@ module Sidekick.Parsers
   )
 where
 
+import Prelude hiding (cycle)
+
 import qualified Data.Char as Char
 import qualified Data.Text as Text
 import qualified Text.Megaparsec as Megaparsec
@@ -76,7 +78,25 @@ parseLoadingMessage = undefined
 
 
 parseDiagnosticMessage :: Parser DiagnosticMessage
-parseDiagnosticMessage = undefined
+parseDiagnosticMessage = asum
+  [ normal
+  , cantFindFile
+  , err
+  , cycle
+  ]
+  where
+  -- GHCi.hs:81:1: Warning: Defined but not used: `foo'
+  normal = undefined
+
+  -- <no location info>: can't find file: FILENAME
+  cantFindFile = undefined
+
+  -- <no location info>: error:
+  err = undefined
+
+  -- Module imports form a cycle:
+  --   module `Module' (Module.hs) imports itself
+  cycle = undefined
 
 
 -- Loaded GHCi configuration from C:\Neil\ghcid\.ghci
