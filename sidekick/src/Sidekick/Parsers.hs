@@ -23,7 +23,7 @@ where
 
 import Relude.Extra.Tuple (dup)
 import Relude.Unsafe (read)
-import Prelude hiding (cycle)
+import Prelude hiding (cycle, lines)
 
 import qualified Data.Char as Char
 import qualified Data.Text as Text
@@ -138,7 +138,14 @@ parseDiagnosticMessage = asum
       }
 
   -- <no location info>: error:
-  err = undefined
+  err = do
+    _ <- Megaparsec.string "<no location info>: error:\n"
+    message <- parseIndentedLines
+    pure DiagnosticMessage
+      { severity = Error
+      , location = Nothing
+      , message
+      }
 
   -- Module imports form a cycle:
   --   module `Module' (Module.hs) imports itself
@@ -216,6 +223,13 @@ parsePositions = point <|> singleLine <|> multiLine
       _ <- Megaparsec.char ','
       y <- parseNatural
       pure (x, y)
+
+
+parseIndentedLines :: Parser Text
+parseIndentedLines = do
+  let parseLine = Megaparsec.hspace1 *> takeRestLine
+  lines <- parseLine `Megaparsec.sepBy` Megaparsec.char '\n'
+  pure (Text.unlines lines)
 
 
 takeRestLine
