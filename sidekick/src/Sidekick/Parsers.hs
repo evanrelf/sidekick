@@ -128,7 +128,14 @@ parseDiagnosticMessage = asum
     pure DiagnosticMessage{severity, location, message}
 
   -- <no location info>: can't find file: FILENAME
-  cantFindFile = undefined
+  cantFindFile = do
+    _ <- Megaparsec.string "<no location info>: can't find file: "
+    file <- takeRestLine
+    pure DiagnosticMessage
+      { severity = Error
+      , location = Nothing
+      , message = "can't find file: " <> file
+      }
 
   -- <no location info>: error:
   err = undefined
