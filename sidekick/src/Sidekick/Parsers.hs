@@ -8,6 +8,7 @@ module Sidekick.Parsers
   , DiagnosticMessage (..)
   , Severity (..)
   , Location (..)
+  , Position (..)
   , LoadConfigMessage (..)
   , parseMessage
   , parseLoadingMessage
@@ -60,8 +61,14 @@ data Severity
 
 data Location = Location
   { file :: FilePath
-  , positionBegin :: (Natural, Natural)
-  , positionEnd :: (Natural, Natural)
+  , spanBegin :: Position
+  , spanEnd :: Position
+  }
+
+
+data Position = Position
+  { line :: Natural
+  , column :: Natural
   }
 
 
