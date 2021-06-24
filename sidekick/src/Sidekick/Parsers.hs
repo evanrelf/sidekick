@@ -7,6 +7,7 @@ module Sidekick.Parsers
   , LoadingMessage (..)
   , DiagnosticMessage (..)
   , Severity (..)
+  , Location (..)
   , LoadConfigMessage (..)
   , parseMessage
   , parseLoadingMessage
@@ -47,9 +48,7 @@ data LoadingMessage = LoadingMessage
 
 data DiagnosticMessage = DiagnosticMessage
   { severity :: Severity
-  , file :: FilePath
-  , positionBegin :: (Natural, Natural)
-  , positionEnd :: (Natural, Natural)
+  , location :: Maybe Location
   , message :: Text
   }
 
@@ -57,6 +56,13 @@ data DiagnosticMessage = DiagnosticMessage
 data Severity
   = Warning
   | Error
+
+
+data Location = Location
+  { file :: FilePath
+  , positionBegin :: (Natural, Natural)
+  , positionEnd :: (Natural, Natural)
+  }
 
 
 newtype LoadConfigMessage = LoadConfigMessage
