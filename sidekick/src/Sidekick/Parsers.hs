@@ -149,7 +149,14 @@ parseDiagnosticMessage = asum
 
   -- Module imports form a cycle:
   --   module `Module' (Module.hs) imports itself
-  cycle = undefined
+  cycle = do
+    _ <- Megaparsec.string "Module imports form a cycle:\n"
+    message <- parseIndentedLines
+    pure DiagnosticMessage
+      { severity = Error
+      , location = Nothing
+      , message
+      }
 
 
 -- Loaded GHCi configuration from C:\Neil\ghcid\.ghci
