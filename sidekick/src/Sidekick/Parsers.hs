@@ -112,7 +112,10 @@ parseDiagnosticMessage = asum
 
 -- Loaded GHCi configuration from C:\Neil\ghcid\.ghci
 parseLoadConfigMessage :: Parser LoadConfigMessage
-parseLoadConfigMessage = undefined
+parseLoadConfigMessage = do
+  _ <- Megaparsec.string "Loaded GHCi configuration from "
+  path <- toString <$> Megaparsec.takeWhile1P Nothing (/= '\n')
+  pure LoadConfigMessage{path}
 
 
 parseCwd :: Parser FilePath
