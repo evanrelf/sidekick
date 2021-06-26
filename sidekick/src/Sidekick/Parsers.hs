@@ -82,8 +82,8 @@ newtype LoadConfigMessage = LoadConfigMessage
 
 parseMessage :: Parser Message
 parseMessage = asum
-  [ Loading <$> parseLoadingMessage
-  , Diagnostic <$> parseDiagnosticMessage
+  [ Megaparsec.try $ Loading <$> parseLoadingMessage
+  , Megaparsec.try $ Diagnostic <$> parseDiagnosticMessage
   , LoadConfig <$> parseLoadConfigMessage
   ]
 
@@ -106,10 +106,10 @@ parseLoadingMessage = do
 
 parseDiagnosticMessage :: Parser DiagnosticMessage
 parseDiagnosticMessage = asum
-  [ normal
-  , cantFindFile
-  , err
-  , cycle
+  [ Megaparsec.try cantFindFile
+  , Megaparsec.try err
+  , Megaparsec.try cycle
+  , normal
   ]
   where
   -- src/Sidekick/Parsers.hs:265:1-14: warning: [-Wunused-top-binds (in -Wextra, -Wunused-binds)]
