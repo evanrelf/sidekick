@@ -82,6 +82,7 @@ library
     , optics
     , optparse-applicative
     , sidekick-ghci
+    , sidekick-ghci-json
     , sidekick-ghci-parsers
     , streamly
     , streamly-fsnotify
