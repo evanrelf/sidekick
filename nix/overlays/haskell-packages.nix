@@ -1,3 +1,5 @@
+{ compiler }:
+
 pkgsFinal: pkgsPrev:
 
 let
@@ -16,6 +18,8 @@ let
 
 in
 overrideHaskellPackages {
+  inherit compiler;
+
   packages = {
     "sidekick" = source ../../sidekick;
     "sidekick-ghci" = source ../../sidekick-ghci;

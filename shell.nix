@@ -1,5 +1,7 @@
+{ compiler ? "ghc8104" }:
+
 let
-  pkgs = import ./nix/pkgs.nix;
+  pkgs = import ./nix/pkgs.nix { inherit compiler; };
 
 in
 pkgs.haskellPackages.shellFor {
