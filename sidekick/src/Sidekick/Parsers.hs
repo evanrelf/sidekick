@@ -11,6 +11,7 @@ module Sidekick.Parsers
   , Location (..)
   , Position (..)
   , LoadConfigMessage (..)
+  , parseMessages
   , parseMessage
   , parseLoadingMessage
   , parseDiagnosticMessage
@@ -85,6 +86,10 @@ newtype LoadConfigMessage = LoadConfigMessage
 newtype UnknownMessage = UnknownMessage
   { message :: Text
   }
+
+
+parseMessages :: Parser [Message]
+parseMessages = parseMessage `Megaparsec.sepBy` Megaparsec.char '\n'
 
 
 parseMessage :: Parser Message
