@@ -19,6 +19,7 @@ overrideHaskellPackages {
   packages = {
     "sidekick" = source ../../sidekick;
     "sidekick-ghci" = source ../../sidekick-ghci;
+    "sidekick-ghci-parsers" = source ../../sidekick-ghci-parsers;
 
     "optics" = "0.4";
     "optics-core" = "0.4";

@@ -6,6 +6,7 @@ pkgs.haskellPackages.shellFor {
   packages = p: [
     p.sidekick
     p.sidekick-ghci
+    p.sidekick-ghci-parsers
   ];
 
   buildInputs = [

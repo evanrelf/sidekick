@@ -1,6 +1,10 @@
+{-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE OverloadedStrings #-}
 
-module Sidekick.Parsers
+module Sidekick.Ghci.Parsers
   ( Message (..)
   , LoadingMessage (..)
   , DiagnosticMessage (..)
@@ -20,11 +24,16 @@ module Sidekick.Parsers
   )
 where
 
-import Relude.Extra.Tuple (dup)
-import Relude.Unsafe (read)
+import Control.Applicative ((<|>))
+import Data.Foldable (asum)
+import Data.Functor ((<&>))
+import Data.Text (Text)
+import Data.Void (Void)
 import Prelude hiding (cycle, lines)
 
 import qualified Data.Char as Char
+import qualified Data.Either as Either
+import qualified Data.List as List
 import qualified Data.Text as Text
 import qualified Text.Megaparsec as Megaparsec
 import qualified Text.Megaparsec.Char as Megaparsec
@@ -70,8 +79,8 @@ data Location = Location
 
 
 data Position = Position
-  { line :: Natural
-  , column :: Natural
+  { line :: Int
+  , column :: Int
   }
 
 
@@ -112,7 +121,7 @@ parseLoadingMessage = do
   moduleName <- Megaparsec.takeWhileP Nothing (/= ' ')
   Megaparsec.hspace1
   _ <- Megaparsec.string "( "
-  file <- toString <$> Megaparsec.takeWhileP Nothing (/= ',')
+  file <- Text.unpack <$> Megaparsec.takeWhileP Nothing (/= ',')
   _ <- Megaparsec.takeWhileP Nothing (/= ')')
   _ <- Megaparsec.char ')'
   pure LoadingMessage{moduleName, file}
@@ -133,7 +142,7 @@ parseDiagnosticMessage = asum
   --     | ^^^^^^^^^^^^^^
   normal = do
     location <- do
-      file <- toString <$> Megaparsec.takeWhileP Nothing (/= ':')
+      file <- Text.unpack <$> Megaparsec.takeWhileP Nothing (/= ':')
       _ <- Megaparsec.char ':'
       (spanBegin, spanEnd) <- parsePositions
       pure $ Just Location{file, spanBegin, spanEnd}
@@ -180,7 +189,7 @@ parseDiagnosticMessage = asum
 parseLoadConfigMessage :: Parser LoadConfigMessage
 parseLoadConfigMessage = do
   _ <- Megaparsec.string "Loaded GHCi configuration from "
-  path <- toString <$> takeRestLine
+  path <- Text.unpack <$> takeRestLine
   pure LoadConfigMessage{path}
 
 
@@ -226,18 +235,19 @@ parsePositions :: Parser (Position, Position)
 parsePositions = Megaparsec.try point <|> singleLine <|> multiLine
   where
   point = do
-    line <- parseNatural
+    line <- parseInt
     _ <- Megaparsec.char ':'
-    column <- parseNatural
+    column <- parseInt
     _ <- Megaparsec.char ':'
-    pure (dup Position{line, column})
+    let position = Position{line, column}
+    pure (position, position)
 
   singleLine = do
-    line <- parseNatural
+    line <- parseInt
     _ <- Megaparsec.char ':'
-    columnBegin <- parseNatural
+    columnBegin <- parseInt
     _ <- Megaparsec.char '-'
-    columnEnd <- parseNatural
+    columnEnd <- parseInt
     _ <- Megaparsec.char ':'
     pure
       ( Position{line, column = columnBegin}
@@ -245,22 +255,22 @@ parsePositions = Megaparsec.try point <|> singleLine <|> multiLine
       )
 
   multiLine = do
-    (lineBegin, columnBegin) <- parseNaturalPair
+    (lineBegin, columnBegin) <- parseIntPair
     _ <- Megaparsec.char '-'
-    (lineEnd, columnEnd) <- parseNaturalPair
+    (lineEnd, columnEnd) <- parseIntPair
     _ <- Megaparsec.char ':'
     pure
       ( Position{line = lineBegin, column = columnBegin}
       , Position{line = lineEnd, column = columnEnd}
       )
 
-  parseNatural = read . toString <$> Megaparsec.some Megaparsec.digitChar
+  parseInt = read <$> Megaparsec.some Megaparsec.digitChar
 
-  parseNaturalPair =
+  parseIntPair =
     Megaparsec.between (Megaparsec.char '(') (Megaparsec.char ')') do
-      x <- parseNatural
+      x <- parseInt
       _ <- Megaparsec.char ','
-      y <- parseNatural
+      y <- parseInt
       pure (x, y)
 
 
@@ -277,7 +287,7 @@ takeRestLine = Megaparsec.takeWhile1P Nothing (/= '\n')
 
 
 unescape :: String -> String
-unescape = rights . unfoldr unesc
+unescape = Either.rights . List.unfoldr unesc
   where
   unesc :: String -> Maybe (Either String Char, String)
   unesc = \case

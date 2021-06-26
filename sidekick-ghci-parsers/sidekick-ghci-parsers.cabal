@@ -1,0 +1,44 @@
+cabal-version: 2.2
+
+name:        sidekick-ghci-parsers
+version:     0.1.0.0
+synopsis:    Parsers for GHCi messages
+description: Parsers for GHCi messages
+category:    Development, Parsing
+author:      Evan Relf <evan@evanrelf.com>
+maintainer:  Evan Relf <evan@evanrelf.com>
+homepage:    https://github.com/evanrelf/sidekick
+license:     BSD-3-Clause
+copyright:   2021 Evan Relf
+tested-with: GHC == 8.6.5, GHC == 8.8.4, GHC == 8.10.4
+
+license-file: LICENSE
+extra-source-files:
+  LICENSE
+  README.md
+
+
+common common
+  build-depends: base >= 4.12 && < 5.0
+  default-language: Haskell2010
+  ghc-options:
+    -Wall
+    -Wcompat
+    -Werror=incomplete-record-updates
+    -Werror=incomplete-uni-patterns
+    -Werror=missing-fields
+    -Werror=partial-fields
+    -Widentities
+    -Wmissing-home-modules
+    -Wredundant-constraints
+    -fshow-warning-groups
+
+
+library
+  import: common
+  hs-source-dirs: src
+  build-depends:
+    , megaparsec
+    , text
+  exposed-modules:
+    Sidekick.Ghci.Parsers

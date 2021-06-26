@@ -79,10 +79,10 @@ library
   build-depends:
     , ansi-terminal
     , brick
-    , megaparsec
     , optics
     , optparse-applicative
     , sidekick-ghci
+    , sidekick-ghci-parsers
     , streamly
     , streamly-fsnotify
     , string-interpolate
@@ -92,7 +92,6 @@ library
   exposed-modules:
     Sidekick
     Sidekick.Options
-    Sidekick.Parsers
     Sidekick.UI
     Sidekick.Watch
 
