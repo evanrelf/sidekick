@@ -112,15 +112,20 @@ parseDiagnosticMessage = asum
   , cycle
   ]
   where
-  -- GHCi.hs:81:1: Warning: Defined but not used: `foo'
+  -- src/Sidekick/Parsers.hs:265:1-14: warning: [-Wunused-top-binds (in -Wextra, -Wunused-binds)]
+  --     Defined but not used: ‘parsePositions’
+  --     |
+  -- 265 | parsePositions = point <|> singleLine <|> multiLine
+  --     | ^^^^^^^^^^^^^^
   normal = do
     location <- do
       file <- toString <$> Megaparsec.takeWhileP Nothing (/= ':')
       _ <- Megaparsec.char ':'
       (spanBegin, spanEnd) <- parsePositions
       pure $ Just Location{file, spanBegin, spanEnd}
+    _ <- Megaparsec.char ' '
     severity <-
-      Megaparsec.optional (Megaparsec.string "Warning: ") <&> \case
+      Megaparsec.optional (Megaparsec.lookAhead (Megaparsec.string "warning: ")) <&> \case
         Just _ -> Warning
         Nothing -> Error
     message <- takeRestLine
