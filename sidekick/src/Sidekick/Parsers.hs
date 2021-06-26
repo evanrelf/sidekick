@@ -18,6 +18,7 @@ module Sidekick.Parsers
   , parseCwd
   , parseModules
   , parseModule
+  , unescape
   )
 where
 
@@ -271,3 +272,14 @@ parseIndentedLines = do
 
 takeRestLine :: Parser Text
 takeRestLine = Megaparsec.takeWhile1P Nothing (/= '\n')
+
+
+unescape :: String -> String
+unescape = rights . unfoldr unesc
+  where
+  unesc :: String -> Maybe (Either String Char, String)
+  unesc = \case
+    ('\ESC' : xs) | (pre, 'm' : post) <- break (== 'm') xs ->
+      Just (Left ('\ESC' : pre <> "m"), post)
+    (x : xs) -> Just (Right x, xs)
+    [] -> Nothing
