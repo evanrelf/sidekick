@@ -10,11 +10,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2.3.4
         name: Checkout
-      - uses: cachix/install-nix-action@v12
+      - uses: cachix/install-nix-action@v13
         name: Install Nix
         with:
           nix_path: nixpkgs=./nix/pkgs.nix
-      - uses: cachix/cachix-action@v8
+      - uses: cachix/cachix-action@v10
         name: Set up Cachix
         with:
           name: evanrelf
