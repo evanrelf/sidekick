@@ -42,6 +42,7 @@ data Message
   = Loading LoadingMessage
   | Diagnostic DiagnosticMessage
   | LoadConfig LoadConfigMessage
+  | Unknown UnknownMessage
 
 
 data LoadingMessage = LoadingMessage
@@ -80,11 +81,17 @@ newtype LoadConfigMessage = LoadConfigMessage
   }
 
 
+newtype UnknownMessage = UnknownMessage
+  { message :: Text
+  }
+
+
 parseMessage :: Parser Message
 parseMessage = asum
   [ Megaparsec.try $ Loading <$> parseLoadingMessage
   , Megaparsec.try $ Diagnostic <$> parseDiagnosticMessage
-  , LoadConfig <$> parseLoadConfigMessage
+  , Megaparsec.try $ LoadConfig <$> parseLoadConfigMessage
+  , Unknown <$> parseUnknownMessage
   ]
 
 
@@ -168,6 +175,17 @@ parseLoadConfigMessage = do
   _ <- Megaparsec.string "Loaded GHCi configuration from "
   path <- toString <$> takeRestLine
   pure LoadConfigMessage{path}
+
+
+-- Build profile: -w ghc-8.10.4 -O1
+-- In order, the following will be built (use -v for more details):
+--  - sidekick-0.0.0.0 (lib) (first run)
+-- Preprocessing library for sidekick-0.0.0.0..
+-- GHCi, version 8.10.4: https://www.haskell.org/ghc/  :? for help
+parseUnknownMessage :: Parser UnknownMessage
+parseUnknownMessage = do
+  message <- takeRestLine
+  pure UnknownMessage{message}
 
 
 parseCwd :: Parser FilePath
