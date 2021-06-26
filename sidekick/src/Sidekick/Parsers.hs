@@ -240,8 +240,5 @@ parseIndentedLines = do
   pure (Text.unlines lines)
 
 
-takeRestLine
-  :: Megaparsec.MonadParsec e s m
-  => Megaparsec.Token s ~ Char
-  => m (Megaparsec.Tokens s)
-takeRestLine = Megaparsec.takeWhileP Nothing (/= '\n')
+takeRestLine :: Parser Text
+takeRestLine = Megaparsec.takeWhile1P Nothing (/= '\n')
