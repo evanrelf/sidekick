@@ -128,7 +128,7 @@ parseDiagnosticMessage = asum
       Megaparsec.optional (Megaparsec.lookAhead (Megaparsec.string "warning: ")) <&> \case
         Just _ -> Warning
         Nothing -> Error
-    message <- takeRestLine
+    message <- mconcat <$> takeRestLine `Megaparsec.endBy1` Megaparsec.char '\n'
     pure DiagnosticMessage{severity, location, message}
 
   -- <no location info>: can't find file: FILENAME
