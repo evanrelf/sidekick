@@ -1,7 +1,4 @@
 {-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE TypeFamilies #-}
-
--- TODO: Test parsers
 
 module Sidekick.Parsers
   ( Message (..)
