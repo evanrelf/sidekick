@@ -95,7 +95,11 @@ parseMessage = asum
   ]
 
 
--- [1 of 2] Compiling GHCi             ( GHCi.hs, interpreted )
+-- [1 of 5] Compiling Sidekick.Options ( src/Sidekick/Options.hs, interpreted )
+-- [2 of 5] Compiling Sidekick.Parsers ( src/Sidekick/Parsers.hs, interpreted )
+-- [3 of 5] Compiling Sidekick.UI      ( src/Sidekick/UI.hs, interpreted )
+-- [4 of 5] Compiling Sidekick.Watch   ( src/Sidekick/Watch.hs, interpreted )
+-- [5 of 5] Compiling Sidekick         ( src/Sidekick.hs, interpreted )
 parseLoadingMessage :: Parser LoadingMessage
 parseLoadingMessage = do
   _ <- Megaparsec.char '['
@@ -169,7 +173,7 @@ parseDiagnosticMessage = asum
       }
 
 
--- Loaded GHCi configuration from C:\Neil\ghcid\.ghci
+-- Loaded GHCi configuration from /Users/evanrelf/dotfiles/haskell/.ghci
 parseLoadConfigMessage :: Parser LoadConfigMessage
 parseLoadConfigMessage = do
   _ <- Megaparsec.string "Loaded GHCi configuration from "
