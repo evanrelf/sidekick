@@ -118,7 +118,6 @@ parseDiagnosticMessage = asum
       file <- toString <$> Megaparsec.takeWhileP Nothing (/= ':')
       _ <- Megaparsec.char ':'
       (spanBegin, spanEnd) <- parsePositions
-      _ <- Megaparsec.char ':'
       pure $ Just Location{file, spanBegin, spanEnd}
     severity <-
       Megaparsec.optional (Megaparsec.string "Warning: ") <&> \case
@@ -191,16 +190,17 @@ parseModule = do
   pure (moduleName, Text.unpack modulePath)
 
 
--- 1:2
--- 1:2-4
--- (1,2)-(3,4)
+-- 1:2:
+-- 1:2-4:
+-- (1,2)-(3,4):
 parsePositions :: Parser (Position, Position)
-parsePositions = point <|> singleLine <|> multiLine
+parsePositions = Megaparsec.try point <|> singleLine <|> multiLine
   where
   point = do
     line <- parseNatural
     _ <- Megaparsec.char ':'
     column <- parseNatural
+    _ <- Megaparsec.char ':'
     pure (dup Position{line, column})
 
   singleLine = do
@@ -209,6 +209,7 @@ parsePositions = point <|> singleLine <|> multiLine
     columnBegin <- parseNatural
     _ <- Megaparsec.char '-'
     columnEnd <- parseNatural
+    _ <- Megaparsec.char ':'
     pure
       ( Position{line, column = columnBegin}
       , Position{line, column = columnEnd}
@@ -216,7 +217,9 @@ parsePositions = point <|> singleLine <|> multiLine
 
   multiLine = do
     (lineBegin, columnBegin) <- parseNaturalPair
+    _ <- Megaparsec.char '-'
     (lineEnd, columnEnd) <- parseNaturalPair
+    _ <- Megaparsec.char ':'
     pure
       ( Position{line = lineBegin, column = columnBegin}
       , Position{line = lineEnd, column = columnEnd}
