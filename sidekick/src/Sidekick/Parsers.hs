@@ -234,7 +234,8 @@ parsePositions = point <|> singleLine <|> multiLine
 
 parseIndentedLines :: Parser Text
 parseIndentedLines = do
-  let parseLine = Megaparsec.hspace1 *> takeRestLine
+  let isHspace c = Char.isSpace c && c /= '\n' && c /= '\r'
+  let parseLine = Megaparsec.takeWhile1P Nothing isHspace <> takeRestLine
   lines <- parseLine `Megaparsec.sepBy` Megaparsec.char '\n'
   pure (Text.unlines lines)
 
