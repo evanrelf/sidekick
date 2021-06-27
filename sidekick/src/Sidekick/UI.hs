@@ -1,31 +1,33 @@
+{-# OPTIONS_GHC -Wno-orphans #-}
+
 module Sidekick.UI
   ( Event (..)
   , start
   )
 where
 
-import Optics (over, set, view)
+import Data.Vector (Vector)
+import Optics
+import Prettyprinter (Pretty (..))
+import Sidekick.Ghci.Json
 import Prelude hiding (State, state)
 
 import qualified Brick
 import qualified Brick.BChan as Brick
 import qualified Brick.Widgets.Border as Brick
-import qualified Data.Text as Text
+import qualified Brick.Widgets.List as Brick
+import qualified Data.Text.Prettyprint.Doc.Render.Vty as Pretty.Vty
 import qualified Graphics.Vty as Vty
-import qualified System.Console.ANSI as Ansi
+import qualified Prettyprinter as Pretty
 
 
 data State = State
-  { loading :: Bool
-  , out :: Text
-  , err :: Text
+  { messages :: Vector Message
   } deriving stock Generic
 
 
 data Event
-  = Loading Bool
-  | ModifyOut (Text -> Text)
-  | ModifyErr (Text -> Text)
+  = ModifyMessages (Vector Message -> Vector Message)
 
 
 type Name = ()
@@ -50,9 +52,7 @@ start eventChannel = liftIO do
 
 initialState :: State
 initialState = State
-  { loading = True
-  , out = ""
-  , err = ""
+  { messages = mempty
   }
 
 
@@ -68,30 +68,26 @@ application = Brick.App
 
 draw :: State -> [Brick.Widget Name]
 draw state = one do
-  Brick.vBox $ catMaybes
-    [ Just $ Brick.txt content
-        & Brick.padBottom Brick.Max
+  Brick.renderList
+    -- Render function
+    (\_isSelected message ->
+      prettyMessage message
+        & Pretty.Vty.render
+        & Brick.raw
         & Brick.padRight Brick.Max
-
-    , if out == mempty then Nothing else Just Brick.hBorder
-
-    , Just $ Brick.txt out
-        & Brick.vLimitPercent 50
         & Brick.padRight Brick.Max
-    ]
-  where
-  out = Text.strip (view #out state)
-  err = view #err state
-  colored color = toText $ Ansi.setSGRCode [Ansi.SetColor Ansi.Foreground Ansi.Dull color]
-  bold = toText $ Ansi.setSGRCode [Ansi.SetConsoleIntensity Ansi.BoldIntensity]
-  reset = toText $ Ansi.setSGRCode [Ansi.Reset]
-  content
-    | view #loading state =
-        bold <> colored Ansi.Yellow <> "Loading..." <> reset <> err
-    | err == mempty =
-        bold <> colored Ansi.Green <> "All good" <> reset
-    | otherwise =
-        err
+        & Brick.border
+    )
+    -- Does list have focus?
+    True
+    -- List
+    (Brick.list
+      -- List name
+      ()
+      -- List elements
+      (view #messages state)
+      -- Minimum list element height
+      1)
 
 
 chooseCursor
@@ -121,18 +117,8 @@ handleEvent state = \case
 
 handleAppEvent :: State -> Event -> Brick.EventM Name (Brick.Next State)
 handleAppEvent state = \case
-  Loading loading ->
-    Brick.continue (set #loading loading state)
-
-  ModifyOut f ->
-    Brick.continue do
-      state
-        & over #out f
-
-  ModifyErr f ->
-    Brick.continue do
-      state
-        & over #err f
+  ModifyMessages f ->
+    Brick.continue (state & over #messages f)
 
 
 handleVtyEvent :: State -> Vty.Event -> Brick.EventM Name (Brick.Next State)
@@ -175,3 +161,52 @@ startEvent = pure
 
 attrMap :: State -> Brick.AttrMap
 attrMap _state = Brick.attrMap Vty.defAttr []
+
+
+prettyMessage :: Message -> Pretty.Doc Vty.Attr
+prettyMessage message =
+  Pretty.vsep $ fmap (fromMaybe mempty) $ filter isJust
+    [ liftA2 (<>) span severity
+    , Just $ Pretty.indent 4 doc
+    -- , reason
+    ]
+  where
+    span = (<> ": ") . prettySpan <$> view #span message
+    severity = prettySeverity <$> view #severity message
+    doc = pretty $ view #doc message
+    reason = pretty <$> view #reason message
+
+
+prettySpan :: Span -> Pretty.Doc ann
+prettySpan Span{file, startLine, startCol, endLine, endCol}
+  | startLine == endLine && startCol == endCol = mconcat
+      [ pretty file
+      , ":"
+      , pretty startLine
+      , ":"
+      , pretty startCol
+      ]
+  | startLine == endLine = mconcat
+      [ pretty file
+      , ":"
+      , pretty startLine
+      , ":"
+      , pretty startCol <> "-" <> pretty (endCol - 1)
+      ]
+  | otherwise = mconcat
+      [ pretty file <> ":"
+      , "(" <> pretty startLine <> "," <> pretty startCol <> ")"
+      , "-"
+      , "(" <> pretty endLine <> "," <> pretty endCol <> ")"
+      ]
+
+
+prettySeverity :: Severity -> Pretty.Doc Vty.Attr
+prettySeverity = \case
+  SevOutput -> mempty
+  SevWarning -> Pretty.annotate magenta "warning: "
+  SevError -> Pretty.annotate red "error: "
+  SevFatal -> Pretty.annotate red "fatal: "
+  where
+  red = Vty.defAttr `Vty.withForeColor` Vty.red
+  magenta = Vty.defAttr `Vty.withForeColor` Vty.magenta

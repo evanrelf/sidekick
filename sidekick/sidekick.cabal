@@ -77,10 +77,13 @@ library
     , streamly
   hs-source-dirs: src
   build-depends:
+    , aeson
     , ansi-terminal
     , brick
     , optics
     , optparse-applicative
+    , prettyprinter
+    , prettyprinter-vty
     , sidekick-ghci
     , sidekick-ghci-json
     , sidekick-ghci-parsers
@@ -89,6 +92,7 @@ library
     , string-interpolate
     , text
     , unliftio
+    , vector
     , vty
   exposed-modules:
     Sidekick

@@ -34,8 +34,14 @@ overrideHaskellPackages {
 
   overrideCabal = {
     # TODO: Fix tests failing in Nix
-    "sidekick-ghci" = old: { doCheck = false; };
+    "sidekick-ghci" = old: {
+      doCheck = false;
+    };
 
+    "prettyprinter-vty" = old: {
+      broken = false;
+      jailbreak = true;
+    };
     "streamly-fsnotify" = old: {
       broken = false;
       jailbreak = true;
