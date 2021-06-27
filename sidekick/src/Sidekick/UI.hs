@@ -5,14 +5,23 @@ module Sidekick.UI
 where
 
 import Optics (over, set, view)
+import Relude.Extra (universe)
+import Sidekick.Ghci.Parsers (unescape)
 import Prelude hiding (State, state)
 
 import qualified Brick
 import qualified Brick.BChan as Brick
+import qualified Brick.Markup as Brick
 import qualified Brick.Widgets.Border as Brick
 import qualified Data.Text as Text
 import qualified Graphics.Vty as Vty
 import qualified System.Console.ANSI as Ansi
+
+import qualified Text.Megaparsec as Megaparsec
+import qualified Text.Megaparsec.Char as Megaparsec
+
+
+type Parser = Megaparsec.Parsec Void Text
 
 
 data State = State
@@ -81,7 +90,7 @@ draw state = one do
     ]
   where
   out = Text.strip (view #out state)
-  err = view #err state
+  err = toText . unescape . toString $ view #err state
   colored color = toText $ Ansi.setSGRCode [Ansi.SetColor Ansi.Foreground Ansi.Dull color]
   bold = toText $ Ansi.setSGRCode [Ansi.SetConsoleIntensity Ansi.BoldIntensity]
   reset = toText $ Ansi.setSGRCode [Ansi.Reset]
@@ -174,4 +183,51 @@ startEvent = pure
 
 
 attrMap :: State -> Brick.AttrMap
-attrMap _state = Brick.attrMap Vty.defAttr []
+attrMap _state = Brick.attrMap Vty.defAttr
+  [ ( "ghci" <> "error"
+    , Vty.defAttr `Vty.withForeColor` Vty.red
+    )
+  , ( "ghci" <> "warning"
+    , Vty.defAttr `Vty.withForeColor` Vty.magenta
+    )
+  , ( "ghci" <> "line-number"
+    , Vty.defAttr `Vty.withForeColor` Vty.blue
+    )
+  ]
+
+
+-- ansiToMarkup :: Text -> Brick.Markup Brick.AttrName
+-- ansiToMarkup = fst . Text.foldl' cons nil
+--   where
+--   nil = (mempty, Nothing)
+
+--   cons (markup, Nothing) char = undefined
+--   cons (markup, Just escape) 'm' = undefined
+
+
+ansiToMarkup :: Text -> Brick.Markup Brick.AttrName
+ansiToMarkup = either undefined id . Megaparsec.parse parser ""
+  where
+  parser = do
+    text1 <- Megaparsec.takeWhileP Nothing (/= '\\')
+    (layer, intensity, color, text2) <- parseColored undefined
+    pure undefined
+
+  parseColored = Megaparsec.between parseAnsiColor parseAnsiReset
+
+
+parseAnsiColor :: Parser (Ansi.ConsoleLayer, Ansi.ColorIntensity, Ansi.Color)
+parseAnsiColor = asum do
+  (layer, intensity, color, code) <- do
+    layer <- universe @Ansi.ConsoleLayer
+    intensity <- universe @Ansi.ColorIntensity
+    color <- universe @Ansi.Color
+    let code = toText (Ansi.setSGRCode [Ansi.SetColor layer intensity color])
+    pure (layer, intensity, color, code)
+  pure $ (layer, intensity, color) <$ Megaparsec.try (Megaparsec.string code)
+
+
+parseAnsiReset :: Parser ()
+parseAnsiReset = do
+  let reset =  toText (Ansi.setSGRCode [Ansi.Reset])
+  () <$ Megaparsec.try (Megaparsec.string reset)
