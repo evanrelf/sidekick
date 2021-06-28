@@ -66,7 +66,7 @@ application = Brick.App
   }
 
 
-draw :: State -> [Brick.Widget n]
+draw :: State -> [Brick.Widget Name]
 draw state = one do
   Brick.vBox $ catMaybes
     [ Just $ Brick.txt content
@@ -96,15 +96,15 @@ draw state = one do
 
 chooseCursor
   :: State
-  -> [Brick.CursorLocation n]
-  -> Maybe (Brick.CursorLocation n)
+  -> [Brick.CursorLocation Name]
+  -> Maybe (Brick.CursorLocation Name)
 chooseCursor _state _cursorLocations = Nothing
 
 
 handleEvent
   :: State
-  -> Brick.BrickEvent n Event
-  -> Brick.EventM n (Brick.Next State)
+  -> Brick.BrickEvent Name Event
+  -> Brick.EventM Name (Brick.Next State)
 handleEvent state = \case
   Brick.VtyEvent vtyEvent ->
     handleVtyEvent state vtyEvent
@@ -119,7 +119,7 @@ handleEvent state = \case
     Brick.continue state
 
 
-handleAppEvent :: State -> Event -> Brick.EventM n (Brick.Next State)
+handleAppEvent :: State -> Event -> Brick.EventM Name (Brick.Next State)
 handleAppEvent state = \case
   Loading loading ->
     Brick.continue (set #loading loading state)
@@ -135,7 +135,7 @@ handleAppEvent state = \case
         & over #err f
 
 
-handleVtyEvent :: State -> Vty.Event -> Brick.EventM n (Brick.Next State)
+handleVtyEvent :: State -> Vty.Event -> Brick.EventM Name (Brick.Next State)
 handleVtyEvent state = \case
   -- Quit
   Vty.EvKey key modifiers | isQuit key modifiers ->
@@ -169,7 +169,7 @@ handleVtyEvent state = \case
     ]
 
 
-startEvent :: State -> Brick.EventM n State
+startEvent :: State -> Brick.EventM Name State
 startEvent = pure
 
 
