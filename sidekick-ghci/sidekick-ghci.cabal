@@ -18,6 +18,10 @@ extra-source-files:
   README.md
 
 
+flag streamly-optimizations
+  manual: True
+
+
 flag fusion-plugin
   default: False
   manual: True
@@ -40,11 +44,12 @@ common common
 
 
 common streamly
-  ghc-options:
-    -O2
-    -fdicts-strict
-    -fmax-worker-args=16
-    -fspec-constr-recursive=16
+  if flag(streamly-optimizations)
+    ghc-options:
+      -O2
+      -fdicts-strict
+      -fmax-worker-args=16
+      -fspec-constr-recursive=16
   if flag(fusion-plugin)
     build-depends: fusion-plugin
     ghc-options: -fplugin=Fusion.Plugin
