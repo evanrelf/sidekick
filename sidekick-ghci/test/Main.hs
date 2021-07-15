@@ -46,18 +46,28 @@ test_expressions ghciCommand =
     Ghci.run ghci "(\"foo\" :: String) == \"bar\""
       `shouldReturn` ("False", "")
 
+    Ghci.run_ ghci ":set -fdiagnostics-color=never"
+
+    Ghci.run ghci "1 + foo"
+      `shouldReturn` ("", "\n<interactive>:21:5-7: error: Variable not in scope: foo")
+
 
 test_commands :: Text -> Tasty.TestTree
 test_commands ghciCommand =
   HUnit.testCase "runs commands" $ Ghci.withGhci ghciCommand \ghci -> do
+    Ghci.run_ ghci "import System.IO (hPutStrLn, stderr, stdout)"
+
     Ghci.run ghci ":type fmap"
       `shouldReturn` ("fmap :: Functor f => (a -> b) -> f a -> f b", "")
 
-    Ghci.run ghci "System.IO.hPutStrLn System.IO.stdout \"hello\\nworld\""
+    Ghci.run ghci "hPutStrLn stdout \"hello\\nworld\""
       `shouldReturn` ("hello\nworld", "")
 
-    Ghci.run ghci "System.IO.hPutStrLn System.IO.stderr \"hello\\nworld\""
+    Ghci.run ghci "hPutStrLn stderr \"hello\\nworld\""
       `shouldReturn` ("", "hello\nworld")
+
+    Ghci.run ghci ":set -foo-bar"
+      `shouldReturn` ("", "Some flags have not been recognized: -foo-bar")
 
 
 test_cancel :: Text -> Tasty.TestTree
