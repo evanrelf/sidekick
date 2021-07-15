@@ -64,11 +64,13 @@ common executable
 
 
 common streamly
+  build-depends: fusion-plugin
   ghc-options:
     -O2
     -fdicts-strict
     -fmax-worker-args=16
     -fspec-constr-recursive=16
+    -fplugin=Fusion.Plugin
 
 
 library
