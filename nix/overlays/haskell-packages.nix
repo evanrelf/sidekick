@@ -32,15 +32,28 @@ overrideHaskellPackages {
     "optics-th" = "0.4";
   };
 
-  overrideCabal = haskellPackagesFinal: haskellPackagesPrev: {
-    # TODO: Fix tests failing in Nix
-    "sidekick-ghci" = old: { doCheck = false; };
+  overrideCabal = haskellPackagesFinal: haskellPackagesPrev:
+    let
+      enableFusionPlugin = old: {
+        configureFlags = (old.configureFlags or [ ]) ++ [ "-ffusion-plugin" ];
+        libraryHaskellDepends = (old.libraryHaskellDepends or [ ]) ++ [
+          haskellPackagesFinal.fusion-plugin
+        ];
+      };
+    in
+    {
+      "sidekick" = old: enableFusionPlugin old;
 
-    "streamly-fsnotify" = old: {
-      broken = false;
-      jailbreak = true;
+      # TODO: Fix tests failing in Nix
+      "sidekick-ghci" = old: enableFusionPlugin old // {
+        doCheck = false;
+      };
+
+      "streamly-fsnotify" = old: {
+        broken = false;
+        jailbreak = true;
+      };
     };
-  };
 
   hackage = {
     rev = "09f25d55b8df341d0e42c152d9703af72a460873";
