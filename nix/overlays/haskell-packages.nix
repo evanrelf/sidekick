@@ -20,7 +20,7 @@ in
 overrideHaskellPackages {
   inherit compiler;
 
-  packages = {
+  packages = haskellPackagesFinal: haskellPackagesPrev: {
     "sidekick" = source ../../sidekick;
     "sidekick-ghci" = source ../../sidekick-ghci;
     "sidekick-ghci-json" = source ../../sidekick-ghci-json;
@@ -32,7 +32,7 @@ overrideHaskellPackages {
     "optics-th" = "0.4";
   };
 
-  overrideCabal = {
+  overrideCabal = haskellPackagesFinal: haskellPackagesPrev: {
     # TODO: Fix tests failing in Nix
     "sidekick-ghci" = old: { doCheck = false; };
 
