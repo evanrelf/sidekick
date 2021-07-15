@@ -1,4 +1,5 @@
 {-# LANGUAGE BlockArguments #-}
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -27,10 +28,15 @@ import qualified Control.Concurrent.STM as STM
 import qualified Control.Exception as Exception
 import qualified Data.Text as Text
 import qualified Data.Text.IO as Text
-import qualified Streamly as Streamly
 import qualified Streamly.Prelude as Streamly
 import qualified System.IO as IO
 import qualified System.Process as Process
+
+#if !MIN_VERSION_streamly(0,8,0)
+import qualified Streamly
+#define fromZipAsync zipAsyncly
+#define fromEffect yieldM
+#endif
 
 
 -- | GHCi session handle.
@@ -226,10 +232,10 @@ receive ghci = liftIO do
 
   let stream :: Streamly.ZipAsyncM IO (Text, Text)
       stream = (,)
-        <$> Streamly.yieldM (foldStream stdoutStream)
-        <*> Streamly.yieldM (foldStream stderrStream)
+        <$> Streamly.fromEffect (foldStream stdoutStream)
+        <*> Streamly.fromEffect (foldStream stderrStream)
 
-  Streamly.zipAsyncly stream
+  Streamly.fromZipAsync stream
     & Streamly.toList
     & fmap head
 

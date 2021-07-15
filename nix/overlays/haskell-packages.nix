@@ -30,6 +30,7 @@ overrideHaskellPackages {
     "optics-core" = "0.4";
     "optics-extra" = "0.4";
     "optics-th" = "0.4";
+    "streamly" = "0.8.0";
   };
 
   overrideCabal = haskellPackagesFinal: haskellPackagesPrev:
@@ -47,6 +48,16 @@ overrideHaskellPackages {
       # TODO: Fix tests failing in Nix
       "sidekick-ghci" = old: enableFusionPlugin old // {
         doCheck = false;
+      };
+
+      "streamly" = old: {
+        # `cabal2nix` doesn't add `Cocoa` to `streamly-0.8.0`'s `buildInputs`
+        # automatically.
+        # https://github.com/NixOS/cabal2nix/issues/470
+        libraryHaskellDepends = (old.libraryHaskellDepends or [ ]) ++
+          pkgsPrev.lib.optionals
+            pkgsPrev.stdenv.isDarwin
+            [ pkgsFinal.darwin.apple_sdk.frameworks.Cocoa ];
       };
 
       "streamly-fsnotify" = old: {
