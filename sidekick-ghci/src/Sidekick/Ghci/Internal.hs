@@ -237,17 +237,11 @@ receive_
   -- ^ GHCi session handle
   -> m ()
 receive_ ghci = liftIO do
-  n <- STM.atomically $ STM.readTVar (promptNumberTVar ghci)
-
-  let consume :: Handle -> IO ()
-      consume handle =
-        Streamly.repeatM (Text.hGetLine handle)
-          & Streamly.takeWhile (/= separator n)
-          & Streamly.drain
+  (stdoutStream, stderrStream) <- receiveStreaming ghci
 
   Async.concurrently_
-    do consume (stdoutHandle ghci)
-    do consume (stderrHandle ghci)
+    do Streamly.drain stdoutStream
+    do Streamly.drain stderrStream
 
 
 -- | Send Ctrl-C (@SIGINT@) to GHCi session. Useful for interrupting
