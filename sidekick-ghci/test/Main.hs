@@ -53,11 +53,11 @@ test_commands ghciCommand =
     Ghci.run ghci ":type fmap"
       `shouldReturn` ("fmap :: Functor f => (a -> b) -> f a -> f b", "")
 
-    Ghci.run ghci ":!echo hello"
-      `shouldReturn` ("hello", "")
+    Ghci.run ghci "System.IO.hPutStrLn System.IO.stdout \"hello\\nworld\""
+      `shouldReturn` ("hello\nworld", "")
 
-    Ghci.run ghci ":!echo hello >&2"
-      `shouldReturn` ("", "hello")
+    Ghci.run ghci "System.IO.hPutStrLn System.IO.stderr \"hello\\nworld\""
+      `shouldReturn` ("", "hello\nworld")
 
 
 test_cancel :: Text -> Tasty.TestTree
