@@ -195,15 +195,15 @@ receiveStreaming ghci = liftIO do
     command <- STM.readTVar (commandTVar ghci)
     pure (promptNumber, command)
 
-  let stream :: Streamly.MonadAsync m => Handle -> Streamly.SerialT m Text
-      stream handle =
+  let streamHandle :: Streamly.MonadAsync m => Handle -> Streamly.SerialT m Text
+      streamHandle handle =
         Streamly.repeatM (liftIO $ Text.hGetLine handle)
           & Streamly.takeWhile (/= separator n)
           & Streamly.filter (/= command)
 
   pure
-    ( stream (stdoutHandle ghci)
-    , stream (stderrHandle ghci)
+    ( streamHandle (stdoutHandle ghci)
+    , streamHandle (stderrHandle ghci)
     )
 
 
@@ -217,8 +217,8 @@ receive
 receive ghci = liftIO do
   (stdoutStream, stderrStream) <- receiveStreaming ghci
 
-  let consume :: Streamly.SerialT IO Text -> IO Text
-      consume stream =
+  let foldStream :: Streamly.SerialT IO Text -> IO Text
+      foldStream stream =
         stream
           & Streamly.map (`Text.snoc` '\n')
           & Streamly.foldl' (<>) mempty
@@ -226,8 +226,8 @@ receive ghci = liftIO do
 
   let stream :: Streamly.ZipAsyncM IO (Text, Text)
       stream = (,)
-        <$> Streamly.yieldM (consume stdoutStream)
-        <*> Streamly.yieldM (consume stderrStream)
+        <$> Streamly.yieldM (foldStream stdoutStream)
+        <*> Streamly.yieldM (foldStream stderrStream)
 
   Streamly.zipAsyncly stream
     & Streamly.toList
