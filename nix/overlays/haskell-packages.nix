@@ -56,7 +56,7 @@ overrideHaskellPackages {
     };
 
   hackage = {
-    rev = "09f25d55b8df341d0e42c152d9703af72a460873";
-    sha256 = "1aaph1302x6r16xdwq4c7n6ry976br4klr0i36ifm7k5znm47z1j";
+    rev = "124d577814bdcb2c29d5df1d99c25109c0ec5866";
+    sha256 = "0zia0ksk8wm9fzp84f8ws7zy4bsa2f84kbjir9lx1b6hglvxga48";
   };
 }
