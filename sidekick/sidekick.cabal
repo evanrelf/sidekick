@@ -17,6 +17,11 @@ extra-source-files:
   README.md
 
 
+flag fusion-plugin
+  default: False
+  manual: True
+
+
 common common
   build-depends:
     , base
@@ -64,13 +69,14 @@ common executable
 
 
 common streamly
-  build-depends: fusion-plugin
   ghc-options:
     -O2
     -fdicts-strict
     -fmax-worker-args=16
     -fspec-constr-recursive=16
-    -fplugin=Fusion.Plugin
+  if flag(fusion-plugin)
+    build-depends: fusion-plugin
+    ghc-options: -fplugin=Fusion.Plugin
 
 
 library
