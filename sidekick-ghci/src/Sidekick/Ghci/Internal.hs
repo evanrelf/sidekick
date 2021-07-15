@@ -180,12 +180,11 @@ send ghci command = liftIO do
 
     pure promptNumber
 
-  liftIO do
-    Text.hPutStrLn (stdinHandle ghci) command
-    Text.hPutStrLn (stdinHandle ghci)
-      ("SIDEKICK.hPutStrLn SIDEKICK.stdout \"\\n" <> separator n <> "\"")
-    Text.hPutStrLn (stdinHandle ghci)
-      ("SIDEKICK.hPutStrLn SIDEKICK.stderr \"\\n" <> separator n <> "\"")
+  Text.hPutStrLn (stdinHandle ghci) command
+  Text.hPutStrLn (stdinHandle ghci)
+    ("SIDEKICK.hPutStrLn SIDEKICK.stdout \"\\n" <> separator n <> "\"")
+  Text.hPutStrLn (stdinHandle ghci)
+    ("SIDEKICK.hPutStrLn SIDEKICK.stderr \"\\n" <> separator n <> "\"")
 
 
 -- | Stream output line-by-line from the previously run command.
