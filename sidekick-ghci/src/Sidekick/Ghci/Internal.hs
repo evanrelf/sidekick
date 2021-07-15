@@ -23,7 +23,6 @@ import Data.Text (Text)
 import System.IO (Handle)
 import Prelude hiding (interact)
 
-import qualified Control.Concurrent.Async as Async
 import qualified Control.Concurrent.STM as STM
 import qualified Control.Exception as Exception
 import qualified Data.Text as Text
@@ -225,9 +224,14 @@ receive ghci = liftIO do
           & Streamly.foldl' (<>) mempty
           & fmap Text.stripEnd
 
-  Async.concurrently
-    do consume stdoutStream
-    do consume stderrStream
+  let stream :: Streamly.ZipAsyncM IO (Text, Text)
+      stream = (,)
+        <$> Streamly.yieldM (consume stdoutStream)
+        <*> Streamly.yieldM (consume stderrStream)
+
+  Streamly.zipAsyncly stream
+    & Streamly.toList
+    & fmap head
 
 
 -- | Ignore output from the previously run command.
@@ -239,9 +243,7 @@ receive_
 receive_ ghci = liftIO do
   (stdoutStream, stderrStream) <- receiveStreaming ghci
 
-  Async.concurrently_
-    do Streamly.drain stdoutStream
-    do Streamly.drain stderrStream
+  Streamly.drain $ stdoutStream `Streamly.parallel` stderrStream
 
 
 -- | Send Ctrl-C (@SIGINT@) to GHCi session. Useful for interrupting

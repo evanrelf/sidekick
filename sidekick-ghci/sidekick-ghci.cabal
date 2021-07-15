@@ -61,7 +61,6 @@ library
     , streamly
   hs-source-dirs: src
   build-depends:
-    , async         >= 2.1.1 && < 3.0
     , process
     , stm
     , streamly      >= 0.7   && < 0.8
