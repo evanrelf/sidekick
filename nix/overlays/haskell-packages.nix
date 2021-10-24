@@ -59,11 +59,6 @@ overrideHaskellPackages {
             pkgsPrev.stdenv.isDarwin
             [ pkgsFinal.darwin.apple_sdk.frameworks.Cocoa ];
       };
-
-      "streamly-fsnotify" = old: {
-        broken = false;
-        jailbreak = true;
-      };
     };
 
   hackage = {
