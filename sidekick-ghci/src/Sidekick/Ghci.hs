@@ -14,8 +14,7 @@ module Sidekick.Ghci
   , withGhci
 
     -- * High-level operations
-    -- | Safe wrappers around 'send' and 'receive'. Functions take a lock on the
-    -- GHCi session to prevent concurrent access, and calls to 'send' are always
+    -- | Safe wrappers around 'send' and 'receive'. Calls to 'send' are always
     -- followed by 'receive' to ensure the GHCi session is in a good state for
     -- the next command.
   , run
