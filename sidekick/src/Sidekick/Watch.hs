@@ -8,7 +8,6 @@ where
 
 import UnliftIO (MonadUnliftIO)
 
-import qualified Streamly
 import qualified Streamly.FSNotify
 import qualified Streamly.Prelude as Streamly
 
