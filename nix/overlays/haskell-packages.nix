@@ -1,14 +1,12 @@
-{ compiler }:
-
 pkgsFinal: pkgsPrev:
 
 let
-  inherit (pkgsPrev.lib) haskellOverlay;
+  inherit (pkgsPrev) haskell-overlay;
 
   source = path:
     let
       name = builtins.baseNameOf path;
-      root = pkgsPrev.lib.gitignoreSource (builtins.dirOf path);
+      root = pkgsPrev.gitignoreSource (builtins.dirOf path);
     in
     pkgsPrev.runCommandLocal "${name}-source" { } ''
       cd ${root}
@@ -16,16 +14,14 @@ let
     '';
 
 in
-haskellOverlay.mkOverlay {
-  inherit compiler;
-
+haskell-overlay.mkOverlay {
   hackage = {
     rev = "74d57b6403ac6b672eacaac9fd68fd7edf54d937";
     sha256 = "18xryn7b6wqlizrfvhnv3jvpgmmlzrx9dkv86r4g8x886ggv23fh";
   };
 
   extensions = [
-    (haskellOverlay.sources (haskellPackagesFinal: haskellPackagesPrev: {
+    (haskell-overlay.sources (haskellPackagesFinal: haskellPackagesPrev: {
       "sidekick" = source ../../sidekick;
       "sidekick-ghci" = source ../../sidekick-ghci;
       "sidekick-ghci-json" = source ../../sidekick-ghci-json;
@@ -40,7 +36,7 @@ haskellOverlay.mkOverlay {
       "streamly" = haskellPackagesFinal."streamly_0_8_0";
     })
 
-    (haskellOverlay.overrideCabal (haskellPackagesFinal: haskellPackagesPrev:
+    (haskell-overlay.overrideCabal (haskellPackagesFinal: haskellPackagesPrev:
       let
         enableFusionPlugin = prev: {
           configureFlags = (prev.configureFlags or [ ]) ++ [ "-ffusion-plugin" ];
@@ -66,7 +62,25 @@ haskellOverlay.mkOverlay {
               pkgsPrev.stdenv.isDarwin
               [ pkgsFinal.darwin.apple_sdk.frameworks.Cocoa ];
         };
-      }))
+      })
+    )
+
+    (haskellPackagesFinal: haskellPackagesPrev: {
+      "sidekick-shell" =
+        haskellPackagesFinal.shellFor {
+          packages = p: [
+            p.sidekick
+            p.sidekick-ghci
+            p.sidekick-ghci-json
+            p.sidekick-ghci-parsers
+          ];
+
+          buildInputs = [
+            pkgsFinal.cabal-install
+            pkgsFinal.ghcid
+          ];
+        };
+    })
   ];
 }
 pkgsFinal
