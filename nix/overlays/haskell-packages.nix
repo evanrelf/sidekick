@@ -3,7 +3,7 @@
 pkgsFinal: pkgsPrev:
 
 let
-  haskellOverlay = import ../lib/haskell-overlay.nix pkgsFinal pkgsPrev;
+  inherit (pkgsPrev.lib) haskellOverlay;
 
   source = path:
     let
@@ -69,3 +69,5 @@ haskellOverlay.mkOverlay {
       }))
   ];
 }
+pkgsFinal
+pkgsPrev
