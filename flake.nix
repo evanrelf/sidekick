@@ -28,13 +28,8 @@
         import nixpkgs {
           inherit system;
           overlays = [
-            (pkgsFinal: pkgsPrev: {
-              inherit (gitignore.lib)
-                gitignoreSource
-                gitignoreFilter
-                ;
-            })
             haskell-overlay.overlay
+            gitignore.overlay
             (import ./nix/overlays/haskell-packages.nix)
           ];
         };
