@@ -9,7 +9,6 @@ maintainer:  Evan Relf <evan@evanrelf.com>
 homepage:    https://github.com/evanrelf/sidekick
 license:     BSD-3-Clause
 copyright:   2022 Evan Relf
-tested-with: GHC == 8.8.4, GHC == 8.10.4
 
 license-file: LICENSE
 extra-source-files:
