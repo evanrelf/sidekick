@@ -197,7 +197,7 @@ receiveStreaming ghci = liftIO do
 
   let streamHandle :: Streamly.MonadAsync m => Handle -> Streamly.SerialT m Text
       streamHandle handle =
-        Streamly.repeatM (liftIO $ Text.hGetLine handle)
+        hGetLines handle
           & Streamly.takeWhile (/= separator n)
           & Streamly.filter (/= command)
 
@@ -268,7 +268,7 @@ interact
   -- ^ GHCi session handle
   -> m ()
 interact ghci = liftIO do
-  Streamly.repeatM Text.getLine
+  hGetLines IO.stdin
     & Streamly.mapM (run ghci)
     & Streamly.trace (\(out, err) -> do
         unless (Text.null err) $ Text.hPutStrLn IO.stderr err
@@ -280,3 +280,20 @@ interact ghci = liftIO do
 -- | Prompt separator text
 separator :: Integer -> Text
 separator n = Text.pack ("__sidekick__" <> show n <> "__")
+
+
+hGetLines
+  :: MonadIO (t m)
+  => Streamly.IsStream t
+  => Streamly.MonadAsync m
+  => Handle
+  -> t m Text
+hGetLines handle = do
+  liftIO $ IO.hSetBuffering handle IO.LineBuffering
+  flip Streamly.unfoldrM () \() -> liftIO do
+    eof <- IO.hIsEOF handle
+    if eof then
+      pure Nothing
+    else do
+      line <- Text.hGetLine handle
+      pure $ Just (line, ())
