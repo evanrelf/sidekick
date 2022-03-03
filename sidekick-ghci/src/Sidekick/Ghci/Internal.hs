@@ -89,41 +89,41 @@ withGhci command action = withRunInIO \unliftIO ->
     -> Maybe Handle
     -> Process.ProcessHandle
     -> IO (Ghci s)
-  setup i o e processHandle =
-    case (i, o, e) of
-      (Just stdinHandle, Just stdoutHandle, Just stderrHandle) -> do
-        promptNumberTVar <- STM.newTVarIO 0
+  setup i o e processHandle = do
+    (stdinHandle, stdoutHandle, stderrHandle) <-
+      case (i, o, e) of
+        (Just i', Just o', Just e') -> pure (i', o', e')
+        _ -> Exception.throwIO (userError "Failed to create GHCi handles")
 
-        let ghci = Ghci
-              { stdinHandle
-              , stdoutHandle
-              , stderrHandle
-              , processHandle
-              , promptNumberTVar
-              }
+    promptNumberTVar <- STM.newTVarIO 0
 
-        IO.hSetBuffering stdinHandle IO.LineBuffering
-        IO.hSetBuffering stdoutHandle IO.LineBuffering
-        IO.hSetBuffering stderrHandle IO.LineBuffering
+    let ghci = Ghci
+          { stdinHandle
+          , stdoutHandle
+          , stderrHandle
+          , processHandle
+          , promptNumberTVar
+          }
 
-        -- Disable prompt
-        Text.hPutStrLn stdinHandle ":set prompt \"\""
-        Text.hPutStrLn stdinHandle ":set prompt-cont \"\""
+    IO.hSetBuffering stdinHandle IO.LineBuffering
+    IO.hSetBuffering stdoutHandle IO.LineBuffering
+    IO.hSetBuffering stderrHandle IO.LineBuffering
 
-        -- Import 'System.IO' for 'hPutStrLn' and friends, and print initial
-        -- separator
-        run_ ghci "import qualified System.IO as SIDEKICK"
+    -- Disable prompt
+    Text.hPutStrLn stdinHandle ":set prompt \"\""
+    Text.hPutStrLn stdinHandle ":set prompt-cont \"\""
 
-        -- Enable color
-        run_ ghci ":set -fdiagnostics-color=always"
+    -- Import 'System.IO' for 'hPutStrLn' and friends, and print initial
+    -- separator
+    run_ ghci "import qualified System.IO as SIDEKICK"
 
-        -- Disable settings that produce ugly output
-        run_ ghci ":unset +t +s"
+    -- Enable color
+    run_ ghci ":set -fdiagnostics-color=always"
 
-        pure ghci
+    -- Disable settings that produce ugly output
+    run_ ghci ":unset +t +s"
 
-      _ ->
-        Exception.throwIO (userError "Failed to create GHCi handles")
+    pure ghci
 
 
 -- | Run a command in GHCi, collecting its output.
