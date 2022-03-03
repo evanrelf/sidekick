@@ -30,7 +30,6 @@ parseOptions = do
       , Options.short 'c'
       , Options.metavar "COMMAND"
       , Options.help "Command to start GHCi session (e.g. `ghci`, `cabal repl`)"
-      , Options.hidden
       ]
 
   directory <-
@@ -39,7 +38,6 @@ parseOptions = do
       , Options.short 'd'
       , Options.metavar "DIRECTORY"
       , Options.help "Directory where to start GHCi"
-      , Options.hidden
       ]
 
   pure Options{command, directory}
