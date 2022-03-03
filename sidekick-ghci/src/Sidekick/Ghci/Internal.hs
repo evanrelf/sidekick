@@ -45,10 +45,10 @@ data Ghci s = Ghci
     -- ^ Handle for GHCi session's @stdin@ stream
 
   , stdoutHandle :: Handle
-    -- ^ Handle for GHCi session's @stderr@ stream
+    -- ^ Handle for GHCi session's @stdout@ stream
 
   , stderrHandle :: Handle
-    -- ^ Handle for GHCi session's @stdin@ stream
+    -- ^ Handle for GHCi session's @stderr@ stream
 
   , processHandle :: Process.ProcessHandle
     -- ^ Process handle for GHCi session
