@@ -53,9 +53,6 @@ data Ghci s = Ghci
   , processHandle :: Process.ProcessHandle
     -- ^ Process handle for GHCi session
 
-  , commandTVar :: STM.TVar Text
-    -- ^ Mutable reference to last executed command
-
   , promptNumberTVar :: STM.TVar Integer
     -- ^ Mutable reference to last prompt number
   }
@@ -95,7 +92,6 @@ withGhci command action = withRunInIO \unliftIO ->
   setup i o e processHandle =
     case (i, o, e) of
       (Just stdinHandle, Just stdoutHandle, Just stderrHandle) -> do
-        commandTVar <- STM.newTVarIO ""
         promptNumberTVar <- STM.newTVarIO 0
 
         let ghci = Ghci
@@ -103,7 +99,6 @@ withGhci command action = withRunInIO \unliftIO ->
               , stdoutHandle
               , stderrHandle
               , processHandle
-              , commandTVar
               , promptNumberTVar
               }
 
@@ -169,10 +164,7 @@ send
 send ghci command = liftIO do
   n <- STM.atomically do
     promptNumber <- (+ 1) <$> STM.readTVar (promptNumberTVar ghci)
-
     STM.writeTVar (promptNumberTVar ghci) promptNumber
-    STM.writeTVar (commandTVar ghci) command
-
     pure promptNumber
 
   Text.hPutStrLn (stdinHandle ghci) command
@@ -190,16 +182,12 @@ receiveStreaming
   -> m (Streamly.SerialT m Text, Streamly.SerialT m Text)
   -- ^ @stdout@ and @stderr@ streams from GHCi
 receiveStreaming ghci = liftIO do
-  (n, command) <- STM.atomically do
-    promptNumber <- STM.readTVar (promptNumberTVar ghci)
-    command <- STM.readTVar (commandTVar ghci)
-    pure (promptNumber, command)
+  n <- STM.atomically $ STM.readTVar (promptNumberTVar ghci)
 
   let streamHandle :: Streamly.MonadAsync m => Handle -> Streamly.SerialT m Text
       streamHandle handle =
         hGetLines handle
           & Streamly.takeWhile (/= separator n)
-          & Streamly.filter (/= command)
 
   pure
     ( streamHandle (stdoutHandle ghci)
