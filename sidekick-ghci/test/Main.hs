@@ -49,7 +49,7 @@ test_expressions ghciCommand =
     Ghci.run_ ghci ":set -fdiagnostics-color=never"
 
     Ghci.run ghci "1 + foo"
-      `shouldReturn` ("", "\n<interactive>:21:5-7: error: Variable not in scope: foo")
+      `shouldReturn` ("", "\n<interactive>:21:5: error: Variable not in scope: foo")
 
 
 test_commands :: Text -> Tasty.TestTree
