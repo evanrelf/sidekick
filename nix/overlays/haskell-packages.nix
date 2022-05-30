@@ -24,14 +24,6 @@ haskell-overlay.mkOverlay
       "sidekick-ghci-parsers" = source ../../sidekick-ghci-parsers;
     }))
 
-    (haskellPackagesFinal: haskellPackagesPrev: {
-      "optics" = haskellPackagesFinal."optics_0_4";
-      "optics-core" = haskellPackagesFinal."optics-core_0_4";
-      "optics-extra" = haskellPackagesFinal."optics-extra_0_4";
-      "optics-th" = haskellPackagesFinal."optics-th_0_4";
-      "streamly" = haskellPackagesFinal."streamly_0_8_1_1";
-    })
-
     (haskell-overlay.overrideCabal (haskellPackagesFinal: haskellPackagesPrev:
       let
         enableFusionPlugin = prev: {
