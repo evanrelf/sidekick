@@ -16,7 +16,11 @@ data Event
   | Removed FilePath
 
 
-start :: Streamly.MonadAsync m => Maybe FilePath -> (Event -> m ()) -> m ()
+start
+  :: Streamly.MonadAsync m
+  => Maybe FilePath
+  -> (Streamly.FSNotify.StopWatching m -> Event -> m ())
+  -> m ()
 start userDirectory handleEvent = do
   let directory = fromMaybe "." userDirectory
 
@@ -25,12 +29,12 @@ start userDirectory handleEvent = do
           (Streamly.FSNotify.hasExtension "hs")
           (Streamly.FSNotify.invert Streamly.FSNotify.isDirectory)
 
-  (_stopWatchingToken, eventStream) <-
+  (stopWatching, eventStream) <-
     Streamly.FSNotify.watchTree directory eventPredicate
 
   eventStream
     & Streamly.mapMaybe convertEvent
-    & Streamly.trace handleEvent
+    & Streamly.trace (handleEvent stopWatching)
     & Streamly.drain
 
 

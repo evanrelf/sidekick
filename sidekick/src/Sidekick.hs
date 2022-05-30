@@ -52,4 +52,4 @@ main = do
     do
       Ghci.withGhci (fromMaybe "cabal repl" command) \ghci -> do
         reload ghci
-        Watch.start directory \_ -> reload ghci
+        Watch.start directory \_stopWatching _event -> reload ghci
