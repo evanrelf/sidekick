@@ -9,6 +9,7 @@
     flake-utils.url = "github:numtide/flake-utils";
     gitignore.url = "github:hercules-ci/gitignore.nix";
     haskell-overlay.url = "github:evanrelf/haskell-overlay";
+    nixpkgs.url = "github:NixOS/nixpkgs";
   };
 
   outputs = inputs@{ flake-utils, nixpkgs, ... }:

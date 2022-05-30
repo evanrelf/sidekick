@@ -33,9 +33,7 @@
     },
     "gitignore": {
       "inputs": {
-        "nixpkgs": [
-          "nixpkgs"
-        ]
+        "nixpkgs": "nixpkgs"
       },
       "locked": {
         "lastModified": 1646480205,
@@ -80,13 +78,28 @@
         "type": "indirect"
       }
     },
+    "nixpkgs_2": {
+      "locked": {
+        "lastModified": 1653947703,
+        "narHash": "sha256-4hfCUx9Mg1CdlCJZ105dHVCzNpeUdefgy2gG0zbxQ9A=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "facee525a19ab06e5de171d8566baa1a7e3af6d8",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "flake-compat": "flake-compat",
         "flake-utils": "flake-utils",
         "gitignore": "gitignore",
         "haskell-overlay": "haskell-overlay",
-        "nixpkgs": "nixpkgs"
+        "nixpkgs": "nixpkgs_2"
       }
     }
   },
