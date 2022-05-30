@@ -44,6 +44,7 @@ common common
     GeneralizedNewtypeDeriving
     InstanceSigs
     LambdaCase
+    MultiParamTypeClasses
     NamedFieldPuns
     NumericUnderscores
     OverloadedLabels
@@ -102,6 +103,7 @@ library
     , text
     , unliftio
     , vty
+    , witch
   exposed-modules:
     Sidekick
     Sidekick.Options

@@ -8,6 +8,7 @@ where
 
 import qualified Streamly.FSNotify
 import qualified Streamly.Prelude as Streamly
+import qualified Witch
 
 
 data Event
@@ -33,21 +34,21 @@ start userDirectory handleEvent = do
     Streamly.FSNotify.watchTree directory eventPredicate
 
   eventStream
-    & Streamly.mapMaybe convertEvent
+    & Streamly.mapMaybe (Witch.tryInto @Event >>> rightToMaybe)
     & Streamly.trace (handleEvent stopWatching)
     & Streamly.drain
 
 
-convertEvent :: Streamly.FSNotify.Event -> Maybe Event
-convertEvent = \case
-  Streamly.FSNotify.Added path _time Streamly.FSNotify.NotDir ->
-    Just (Added path)
+instance Witch.TryFrom Streamly.FSNotify.Event Event where
+  tryFrom = Witch.maybeTryFrom \case
+    Streamly.FSNotify.Added path _time Streamly.FSNotify.NotDir ->
+      Just (Added path)
 
-  Streamly.FSNotify.Modified path _time Streamly.FSNotify.NotDir ->
-    Just (Modified path)
+    Streamly.FSNotify.Modified path _time Streamly.FSNotify.NotDir ->
+      Just (Modified path)
 
-  Streamly.FSNotify.Removed path _time Streamly.FSNotify.NotDir ->
-    Just (Removed path)
+    Streamly.FSNotify.Removed path _time Streamly.FSNotify.NotDir ->
+      Just (Removed path)
 
-  _ ->
-    Nothing
+    _ ->
+      Nothing
