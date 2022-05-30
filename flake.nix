@@ -17,7 +17,7 @@
             overlays = [
               inputs.gitignore.overlay
               inputs.haskell-overlay.overlay
-              (import ./nix/overlays/haskell-packages.nix)
+              (import ./nix/haskell-packages.nix)
             ];
           };
       in

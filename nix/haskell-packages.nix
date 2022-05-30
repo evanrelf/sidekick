@@ -18,10 +18,10 @@ haskell-overlay.mkOverlay
 {
   extensions = [
     (haskell-overlay.sources (haskellPackagesFinal: haskellPackagesPrev: {
-      "sidekick" = source ../../sidekick;
-      "sidekick-ghci" = source ../../sidekick-ghci;
-      "sidekick-ghci-json" = source ../../sidekick-ghci-json;
-      "sidekick-ghci-parsers" = source ../../sidekick-ghci-parsers;
+      "sidekick" = source ../sidekick;
+      "sidekick-ghci" = source ../sidekick-ghci;
+      "sidekick-ghci-json" = source ../sidekick-ghci-json;
+      "sidekick-ghci-parsers" = source ../sidekick-ghci-parsers;
     }))
 
     (haskell-overlay.overrideCabal (haskellPackagesFinal: haskellPackagesPrev:
