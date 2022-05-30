@@ -6,8 +6,6 @@ module Sidekick.Watch
   )
 where
 
-import UnliftIO (MonadUnliftIO)
-
 import qualified Streamly.FSNotify
 import qualified Streamly.Prelude as Streamly
 
@@ -18,12 +16,7 @@ data Event
   | Removed FilePath
 
 
-start
-  :: MonadUnliftIO m
-  => Streamly.MonadAsync m
-  => Maybe FilePath
-  -> (Event -> m ())
-  -> m ()
+start :: Streamly.MonadAsync m => Maybe FilePath -> (Event -> m ()) -> m ()
 start userDirectory handleEvent = do
   let directory = fromMaybe "." userDirectory
 
