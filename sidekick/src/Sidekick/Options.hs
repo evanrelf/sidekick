@@ -15,8 +15,8 @@ data Options = Options
   } deriving stock Generic
 
 
-getOptions :: IO Options
-getOptions = do
+getOptions :: MonadIO m => m Options
+getOptions = liftIO do
   let parserPrefs = Options.prefs Options.showHelpOnError
   let parserInfo = Options.info (Options.helper <*> parseOptions) mempty
   Options.customExecParser parserPrefs parserInfo
