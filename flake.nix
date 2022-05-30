@@ -23,6 +23,8 @@
       in
       rec {
         packages = {
+          default = pkgs.haskellPackages.sidekick;
+
           inherit (pkgs.haskellPackages)
             sidekick
             sidekick-ghci
@@ -32,9 +34,7 @@
             ;
         };
 
-        defaultPackage = packages.sidekick;
-
-        devShell = packages.sidekick-shell;
+        devShells.default = packages.sidekick-shell;
       }
     );
 }
