@@ -35,7 +35,7 @@ parseOptions = do
   directory <-
     Options.optional $ Options.strOption $ mconcat
       [ Options.long "directory"
-      , Options.short 'd'
+      , Options.short 'C'
       , Options.metavar "DIRECTORY"
       , Options.help "Directory where to start GHCi"
       ]
