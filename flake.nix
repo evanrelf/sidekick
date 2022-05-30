@@ -11,40 +11,33 @@
     haskell-overlay.url = "github:evanrelf/haskell-overlay";
   };
 
-  outputs =
-    { self
-    , nixpkgs
-    , flake-utils
-    , gitignore
-    , haskell-overlay
-    , ...
-    }:
+  outputs = inputs@{ flake-utils, nixpkgs, ... }:
     flake-utils.lib.eachDefaultSystem (system:
-    let
-      pkgs =
-        import nixpkgs {
-          inherit system;
-          overlays = [
-            gitignore.overlay
-            haskell-overlay.overlay
-            (import ./nix/overlays/haskell-packages.nix)
-          ];
+      let
+        pkgs =
+          import nixpkgs {
+            inherit system;
+            overlays = [
+              inputs.gitignore.overlay
+              inputs.haskell-overlay.overlay
+              (import ./nix/overlays/haskell-packages.nix)
+            ];
+          };
+      in
+      rec {
+        packages = {
+          inherit (pkgs.haskellPackages)
+            sidekick
+            sidekick-ghci
+            sidekick-ghci-json
+            sidekick-ghci-parsers
+            sidekick-shell
+            ;
         };
-    in
-    rec {
-      packages = {
-        inherit (pkgs.haskellPackages)
-          sidekick
-          sidekick-ghci
-          sidekick-ghci-json
-          sidekick-ghci-parsers
-          sidekick-shell
-          ;
-      };
 
-      defaultPackage = packages.sidekick;
+        defaultPackage = packages.sidekick;
 
-      devShell = packages.sidekick-shell;
-    }
+        devShell = packages.sidekick-shell;
+      }
     );
 }
