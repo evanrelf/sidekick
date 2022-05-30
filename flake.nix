@@ -7,11 +7,8 @@
       flake = false;
     };
     flake-utils.url = "github:numtide/flake-utils";
+    gitignore.url = "github:hercules-ci/gitignore.nix";
     haskell-overlay.url = "github:evanrelf/haskell-overlay";
-    gitignore = {
-      url = "github:hercules-ci/gitignore.nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
   };
 
   outputs =
@@ -28,8 +25,8 @@
         import nixpkgs {
           inherit system;
           overlays = [
-            haskell-overlay.overlay
             gitignore.overlay
+            haskell-overlay.overlay
             (import ./nix/overlays/haskell-packages.nix)
           ];
         };
