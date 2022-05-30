@@ -43,9 +43,6 @@ import qualified Text.Megaparsec.Char as Megaparsec
 -- https://github.com/ndmitchell/ghcid/blob/master/src/Language/Haskell/Ghcid/Parser.hs
 
 
-type Parser = Megaparsec.Parsec Void Text
-
-
 data Message
   = Loading LoadingMessage
   | Diagnostic DiagnosticMessage
@@ -94,11 +91,11 @@ newtype UnknownMessage = UnknownMessage
   }
 
 
-parseMessages :: Parser [Message]
+parseMessages :: Megaparsec.Parsec Void Text [Message]
 parseMessages = parseMessage `Megaparsec.sepBy` Megaparsec.char '\n'
 
 
-parseMessage :: Parser Message
+parseMessage :: Megaparsec.Parsec Void Text Message
 parseMessage = asum
   [ Megaparsec.try $ Loading <$> parseLoadingMessage
   , Megaparsec.try $ Diagnostic <$> parseDiagnosticMessage
@@ -112,7 +109,7 @@ parseMessage = asum
 -- [3 of 5] Compiling Sidekick.UI      ( src/Sidekick/UI.hs, interpreted )
 -- [4 of 5] Compiling Sidekick.Watch   ( src/Sidekick/Watch.hs, interpreted )
 -- [5 of 5] Compiling Sidekick         ( src/Sidekick.hs, interpreted )
-parseLoadingMessage :: Parser LoadingMessage
+parseLoadingMessage :: Megaparsec.Parsec Void Text LoadingMessage
 parseLoadingMessage = do
   _ <- Megaparsec.char '['
   _ <- Megaparsec.takeWhileP Nothing (/= ']')
@@ -127,7 +124,7 @@ parseLoadingMessage = do
   pure LoadingMessage{moduleName, file}
 
 
-parseDiagnosticMessage :: Parser DiagnosticMessage
+parseDiagnosticMessage :: Megaparsec.Parsec Void Text DiagnosticMessage
 parseDiagnosticMessage = asum
   [ Megaparsec.try cantFindFile
   , Megaparsec.try err
@@ -186,7 +183,7 @@ parseDiagnosticMessage = asum
 
 
 -- Loaded GHCi configuration from /Users/evanrelf/dotfiles/haskell/.ghci
-parseLoadConfigMessage :: Parser LoadConfigMessage
+parseLoadConfigMessage :: Megaparsec.Parsec Void Text LoadConfigMessage
 parseLoadConfigMessage = do
   _ <- Megaparsec.string "Loaded GHCi configuration from "
   path <- Text.unpack <$> takeRestLine
@@ -198,13 +195,13 @@ parseLoadConfigMessage = do
 --  - sidekick-0.0.0.0 (lib) (first run)
 -- Preprocessing library for sidekick-0.0.0.0..
 -- GHCi, version 8.10.4: https://www.haskell.org/ghc/  :? for help
-parseUnknownMessage :: Parser UnknownMessage
+parseUnknownMessage :: Megaparsec.Parsec Void Text UnknownMessage
 parseUnknownMessage = do
   message <- takeRestLine
   pure UnknownMessage{message}
 
 
-parseCwd :: Parser FilePath
+parseCwd :: Megaparsec.Parsec Void Text FilePath
 parseCwd = do
   _ <- Megaparsec.string "current working directory:"
   Megaparsec.space1
@@ -212,11 +209,11 @@ parseCwd = do
   pure (Text.unpack cwd)
 
 
-parseModules :: Parser [(Text, FilePath)]
+parseModules :: Megaparsec.Parsec Void Text [(Text, FilePath)]
 parseModules = Megaparsec.many (parseModule <* Megaparsec.newline)
 
 
-parseModule :: Parser (Text, FilePath)
+parseModule :: Megaparsec.Parsec Void Text (Text, FilePath)
 parseModule = do
   moduleName <- Megaparsec.takeWhile1P Nothing (not . Char.isSpace)
   Megaparsec.space1
@@ -231,7 +228,7 @@ parseModule = do
 -- 1:2:
 -- 1:2-4:
 -- (1,2)-(3,4):
-parsePositions :: Parser (Position, Position)
+parsePositions :: Megaparsec.Parsec Void Text (Position, Position)
 parsePositions = Megaparsec.try point <|> singleLine <|> multiLine
   where
   point = do
@@ -274,7 +271,7 @@ parsePositions = Megaparsec.try point <|> singleLine <|> multiLine
       pure (x, y)
 
 
-parseIndentedLines :: Parser Text
+parseIndentedLines :: Megaparsec.Parsec Void Text Text
 parseIndentedLines = do
   let isHspace c = Char.isSpace c && c /= '\n' && c /= '\r'
   let parseLine = Megaparsec.takeWhile1P Nothing isHspace <> takeRestLine
@@ -282,7 +279,7 @@ parseIndentedLines = do
   pure (Text.unlines lines)
 
 
-takeRestLine :: Parser Text
+takeRestLine :: Megaparsec.Parsec Void Text Text
 takeRestLine = Megaparsec.takeWhile1P Nothing (/= '\n')
 
 
