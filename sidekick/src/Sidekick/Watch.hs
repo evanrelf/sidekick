@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE OverloadedLists #-}
 
 module Sidekick.Watch
   ( Event (..)
@@ -7,6 +8,7 @@ module Sidekick.Watch
 where
 
 import Prelude hiding (and, or)
+import Relude.Extra.Foldable1 (foldl1')
 
 import qualified Streamly.FSNotify
 import qualified Streamly.Prelude as Streamly
@@ -34,7 +36,11 @@ start userDirectory handleEvent = do
         let or = Streamly.FSNotify.disj
 
         let isFile = Streamly.FSNotify.invert Streamly.FSNotify.isDirectory
-        let isHaskell = Streamly.FSNotify.hasExtension "hs"
+        let isHaskell = foldl1' or
+              [ Streamly.FSNotify.hasExtension "hs"
+              , Streamly.FSNotify.hasExtension "hs-boot"
+              , Streamly.FSNotify.hasExtension "lhs"
+              ]
         let isCabal = Streamly.FSNotify.hasExtension "cabal"
 
         isFile `and` (isHaskell `or` isCabal)
