@@ -12,6 +12,7 @@ import Relude.Extra.Foldable1 (foldl1')
 import qualified Streamly.FSNotify
 import qualified Streamly.Prelude as Streamly
 import qualified System.FilePath as FilePath
+import qualified UnliftIO.Directory as Directory
 import qualified Witch
 
 
@@ -28,7 +29,9 @@ start
   -> (Streamly.FSNotify.StopWatching m -> Event -> m ())
   -> m ()
 start userDirectory handleEvent = do
-  let directory = fromMaybe "." userDirectory
+  directory <- case userDirectory of
+    Nothing -> Directory.getCurrentDirectory
+    Just relative -> Directory.makeAbsolute relative
 
   let eventPredicate = do
         let and = Streamly.FSNotify.conj
