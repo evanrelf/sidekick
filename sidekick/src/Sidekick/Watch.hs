@@ -6,6 +6,8 @@ module Sidekick.Watch
   )
 where
 
+import Prelude hiding (and, or)
+
 import qualified Streamly.FSNotify
 import qualified Streamly.Prelude as Streamly
 import qualified System.FilePath as FilePath
@@ -27,12 +29,15 @@ start
 start userDirectory handleEvent = do
   let directory = fromMaybe "." userDirectory
 
-  let eventPredicate =
-        Streamly.FSNotify.conj
-          (Streamly.FSNotify.invert Streamly.FSNotify.isDirectory)
-          (Streamly.FSNotify.disj
-            (Streamly.FSNotify.hasExtension "hs")
-            (Streamly.FSNotify.hasExtension "cabal"))
+  let eventPredicate = do
+        let and = Streamly.FSNotify.conj
+        let or = Streamly.FSNotify.disj
+
+        let isFile = Streamly.FSNotify.invert Streamly.FSNotify.isDirectory
+        let isHaskell = Streamly.FSNotify.hasExtension "hs"
+        let isCabal = Streamly.FSNotify.hasExtension "cabal"
+
+        isFile `and` (isHaskell `or` isCabal)
 
   (stopWatching, eventStream) <-
     Streamly.FSNotify.watchTree directory eventPredicate
