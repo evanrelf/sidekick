@@ -12,7 +12,7 @@ import qualified Options.Applicative as Options
 data Options = Options
   { command :: Maybe Text
   , directory :: Maybe FilePath
-  } deriving stock Generic
+  }
 
 
 getOptions :: MonadIO m => m Options

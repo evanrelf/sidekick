@@ -51,6 +51,7 @@ common common
     OverloadedStrings
     ScopedTypeVariables
     TypeApplications
+    ViewPatterns
   ghc-options:
     -Wall
     -Wcompat
@@ -92,7 +93,6 @@ library
   build-depends:
     , ansi-terminal
     , brick
-    , optics
     , optparse-applicative
     , sidekick-ghci
     , sidekick-ghci-json
