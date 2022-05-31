@@ -41,6 +41,8 @@ common common
     DeriveGeneric
     DerivingStrategies
     DerivingVia
+    FlexibleContexts
+    FlexibleInstances
     GeneralizedNewtypeDeriving
     InstanceSigs
     LambdaCase
