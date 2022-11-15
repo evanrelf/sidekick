@@ -94,9 +94,10 @@ library
   hs-source-dirs: src
   build-depends:
     , aeson
+    , co-log-core
     , data-default
     , filepath
-    , lsp
+    , lsp                   >= 1.5.0.0
     , lsp-types
     , optparse-applicative
     , sidekick-ghci

@@ -18,6 +18,8 @@ haskell-overlay.mkOverlay
 {
   extensions = [
     (haskell-overlay.sources (haskellPackagesFinal: haskellPackagesPrev: {
+      "lsp" = "1.5.0.0";
+      "lsp-types" = "1.5.0.0";
       "sidekick" = source ../sidekick;
       "sidekick-ghci" = source ../sidekick-ghci;
       "sidekick-ghci-json" = source ../sidekick-ghci-json;

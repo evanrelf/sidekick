@@ -8,20 +8,24 @@ module Sidekick.Lsp
   )
 where
 
+import Colog.Core ((<&))
 import Data.Default (def)
 
+import qualified Colog.Core as Colog
 import qualified Data.Aeson as Aeson
+import qualified Language.LSP.Logging as Lsp (logToShowMessage)
 import qualified Language.LSP.Server as Lsp
 import qualified Language.LSP.Types as Lsp
+
+
+-- https://microsoft.github.io/language-server-protocol/specifications/specification-3-15
 
 
 type Config = ()
 
 
-type Env = ()
 
-
-type M = IO
+type M = Lsp.LspT Config IO
 
 
 start :: MonadIO m => m Int
@@ -45,13 +49,15 @@ start = liftIO do
   doInitialize
     :: Lsp.LanguageContextEnv Config
     -> Lsp.Message Lsp.Initialize
-    -> IO (Either Lsp.ResponseError Env)
-  doInitialize languageContextEnv initializeRequest = pure $ Right ()
+    -> IO (Either Lsp.ResponseError (Lsp.LanguageContextEnv Config))
+  doInitialize languageContextEnv initializeRequest =
+    pure $ Right languageContextEnv
 
   staticHandlers :: Lsp.Handlers M
   staticHandlers = mconcat
     [ Lsp.requestHandler Lsp.SInitialize \_request _responder -> pure ()
-    , Lsp.notificationHandler Lsp.SInitialized \_notification -> pure ()
+    , Lsp.notificationHandler Lsp.SInitialized \_notification -> do
+        Lsp.logToShowMessage <& "Hello, world!" `Colog.WithSeverity` Colog.Info
     , Lsp.requestHandler Lsp.SShutdown \_request _responder -> pure ()
     , Lsp.notificationHandler Lsp.SExit \_notification -> pure ()
     , Lsp.notificationHandler Lsp.SWorkspaceDidChangeWorkspaceFolders \_notification -> pure ()
@@ -67,7 +73,8 @@ start = liftIO do
     , Lsp.notificationHandler Lsp.STextDocumentDidClose \_notification -> pure ()
     , Lsp.requestHandler Lsp.STextDocumentCompletion \_request _responder -> pure ()
     , Lsp.requestHandler Lsp.SCompletionItemResolve \_request _responder -> pure ()
-    , Lsp.requestHandler Lsp.STextDocumentHover \_request _responder -> pure ()
+    , Lsp.requestHandler Lsp.STextDocumentHover \_request _responder -> do
+        Lsp.logToShowMessage <& "Hovering!" `Colog.WithSeverity` Colog.Info
     , Lsp.requestHandler Lsp.STextDocumentSignatureHelp \_request _responder -> pure ()
     , Lsp.requestHandler Lsp.STextDocumentDeclaration \_request _responder -> pure ()
     , Lsp.requestHandler Lsp.STextDocumentDefinition \_request _responder -> pure ()
@@ -100,11 +107,11 @@ start = liftIO do
     , Lsp.requestHandler Lsp.SWorkspaceSemanticTokensRefresh \_request _responder -> pure ()
     ]
 
-  interpretHandler :: Env -> M Lsp.<~> IO
-  interpretHandler env =
+  interpretHandler :: Lsp.LanguageContextEnv Config -> M Lsp.<~> IO
+  interpretHandler languageContextEnv =
     Lsp.Iso
-      { Lsp.forward = identity
-      , Lsp.backward = identity
+      { Lsp.forward = Lsp.runLspT languageContextEnv
+      , Lsp.backward = liftIO
       }
 
   options :: Lsp.Options
