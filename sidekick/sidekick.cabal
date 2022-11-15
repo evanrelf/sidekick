@@ -93,8 +93,6 @@ library
     , streamly
   hs-source-dirs: src
   build-depends:
-    , ansi-terminal
-    , brick
     , filepath
     , optparse-applicative
     , sidekick-ghci
@@ -102,15 +100,12 @@ library
     , sidekick-ghci-parsers
     , streamly
     , streamly-fsnotify
-    , string-interpolate
     , text
     , unliftio
-    , vty
     , witch
   exposed-modules:
     Sidekick
     Sidekick.Options
-    Sidekick.UI
     Sidekick.Watch
 
 
