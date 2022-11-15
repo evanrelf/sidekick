@@ -93,7 +93,11 @@ library
     , streamly
   hs-source-dirs: src
   build-depends:
+    , aeson
+    , data-default
     , filepath
+    , lsp
+    , lsp-types
     , optparse-applicative
     , sidekick-ghci
     , sidekick-ghci-json
@@ -105,6 +109,7 @@ library
     , witch
   exposed-modules:
     Sidekick
+    Sidekick.Lsp
     Sidekick.Options
     Sidekick.Watch
 
