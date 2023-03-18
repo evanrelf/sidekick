@@ -2,7 +2,7 @@
 -- Module:     Sidekick.Ghci
 -- Stability:  experimental
 -- License:    BSD-3-Clause
--- Copyright:  © 2022 Evan Relf
+-- Copyright:  © 2023 Evan Relf
 -- Maintainer: evan@evanrelf.com
 --
 -- Interact with a live GHCi session

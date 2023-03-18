@@ -11,7 +11,7 @@
 -- Module:     Sidekick.Ghci.Internal
 -- Stability:  experimental
 -- License:    BSD-3-Clause
--- Copyright:  © 2022 Evan Relf
+-- Copyright:  © 2023 Evan Relf
 -- Maintainer: evan@evanrelf.com
 
 module Sidekick.Ghci.Internal where
