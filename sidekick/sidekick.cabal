@@ -36,6 +36,7 @@ common common
   default-language: Haskell2010
   default-extensions:
     BlockArguments
+    DataKinds
     DeriveAnyClass
     DeriveFunctor
     DeriveGeneric
@@ -56,6 +57,7 @@ common common
     OverloadedStrings
     ScopedTypeVariables
     TypeApplications
+    TypeOperators
     ViewPatterns
   ghc-options:
     -Wall
@@ -66,6 +68,7 @@ common common
     -Werror=partial-fields
     -Widentities
     -Wmissing-home-modules
+    -Wno-unticked-promoted-constructors
     -Wredundant-constraints
     -foptimal-applicative-do
     -fshow-warning-groups

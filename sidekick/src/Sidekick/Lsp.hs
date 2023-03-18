@@ -1,8 +1,3 @@
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE TypeOperators #-}
-
-{-# OPTIONS_GHC -Wno-unticked-promoted-constructors #-}
-
 module Sidekick.Lsp
   ( start
   )
