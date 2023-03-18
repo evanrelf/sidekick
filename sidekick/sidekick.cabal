@@ -41,6 +41,7 @@ common common
     DeriveGeneric
     DerivingStrategies
     DerivingVia
+    DuplicateRecordFields
     FlexibleContexts
     FlexibleInstances
     GeneralizedNewtypeDeriving
@@ -48,8 +49,10 @@ common common
     LambdaCase
     MultiParamTypeClasses
     NamedFieldPuns
+    NoFieldSelectors
     NumericUnderscores
     OverloadedLabels
+    OverloadedRecordDot
     OverloadedStrings
     ScopedTypeVariables
     TypeApplications
