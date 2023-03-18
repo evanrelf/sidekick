@@ -3,7 +3,6 @@
 
   inputs = {
     flake-utils.url = "github:numtide/flake-utils";
-    gitignore.url = "github:hercules-ci/gitignore.nix";
     haskell-overlay.url = "github:evanrelf/haskell-overlay";
     nixpkgs.url = "github:NixOS/nixpkgs";
   };
@@ -15,7 +14,6 @@
           import nixpkgs {
             inherit system;
             overlays = [
-              inputs.gitignore.overlay
               inputs.haskell-overlay.overlay
               (import ./nix/haskell-packages.nix)
             ];

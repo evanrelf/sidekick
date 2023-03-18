@@ -6,7 +6,7 @@ let
   source = path:
     let
       name = builtins.baseNameOf path;
-      root = pkgsPrev.gitignoreSource (builtins.dirOf path);
+      root = builtins.dirOf path;
     in
     pkgsPrev.runCommandLocal "${name}-source" { } ''
       cd ${root}
