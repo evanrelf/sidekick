@@ -24,21 +24,21 @@ main = do
 
   Tasty.defaultMain $ Tasty.testGroup "sidekick-ghci"
     [ Tasty.testGroup "ghci" $ fmap ($ "ghci") $
-        [ test_expressions
-        , test_commands
-        , test_cancel
+        [ testExpressions
+        , testCommands
+        , testCancel
         ]
 
     , Tasty.testGroup "cabal repl" $ fmap ($ "cabal repl sidekick-ghci") $
-        [ test_expressions
-        , test_commands
-        , test_cancel
+        [ testExpressions
+        , testCommands
+        , testCancel
         ]
     ]
 
 
-test_expressions :: Text -> Tasty.TestTree
-test_expressions ghciCommand =
+testExpressions :: Text -> Tasty.TestTree
+testExpressions ghciCommand =
   HUnit.testCase "evaluates expressions" $ Ghci.withGhci ghciCommand \ghci -> do
     Ghci.run ghci "(2 :: Int) + 2"
       `shouldReturn` ("4", "")
@@ -52,8 +52,8 @@ test_expressions ghciCommand =
       `shouldReturn` ("", "\n<interactive>:21:5: error: Variable not in scope: foo")
 
 
-test_commands :: Text -> Tasty.TestTree
-test_commands ghciCommand =
+testCommands :: Text -> Tasty.TestTree
+testCommands ghciCommand =
   HUnit.testCase "runs commands" $ Ghci.withGhci ghciCommand \ghci -> do
     Ghci.run_ ghci "import System.IO (hPutStrLn, stderr, stdout)"
 
@@ -70,8 +70,8 @@ test_commands ghciCommand =
       `shouldReturn` ("", "Some flags have not been recognized: -foo-bar")
 
 
-test_cancel :: Text -> Tasty.TestTree
-test_cancel ghciCommand =
+testCancel :: Text -> Tasty.TestTree
+testCancel ghciCommand =
   let
     scenario :: IO (Maybe ())
     scenario = Ghci.withGhci ghciCommand \ghci -> do

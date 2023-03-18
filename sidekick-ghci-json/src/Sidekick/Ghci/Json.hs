@@ -20,8 +20,9 @@ data Message = Message
   , doc :: Text
   , severity :: Maybe Severity
   , reason :: Maybe Text
-  } deriving stock (Generic, Show)
-    deriving anyclass (Aeson.ToJSON, Aeson.FromJSON)
+  }
+  deriving stock (Generic, Show)
+  deriving anyclass (Aeson.ToJSON, Aeson.FromJSON)
 
 
 data Span = Span
@@ -30,8 +31,9 @@ data Span = Span
   , startCol :: Int
   , endLine :: Int
   , endCol :: Int
-  } deriving stock (Generic, Show)
-    deriving anyclass (Aeson.ToJSON, Aeson.FromJSON)
+  }
+  deriving stock (Generic, Show)
+  deriving anyclass (Aeson.ToJSON, Aeson.FromJSON)
 
 
 data Severity

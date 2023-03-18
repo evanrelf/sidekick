@@ -24,7 +24,6 @@ import qualified Language.LSP.Types as Lsp
 type Config = ()
 
 
-
 type M = Lsp.LspT Config IO
 
 
