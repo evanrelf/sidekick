@@ -3,16 +3,6 @@ pkgsFinal: pkgsPrev:
 let
   inherit (pkgsPrev) haskell-overlay;
 
-  source = path:
-    let
-      name = builtins.baseNameOf path;
-      root = builtins.dirOf path;
-    in
-    pkgsPrev.runCommandLocal "${name}-source" { } ''
-      cd ${root}
-      ${pkgsFinal.coreutils}/bin/cp -r --dereference ${name} $out
-    '';
-
 in
 haskell-overlay.mkOverlay
 {
@@ -20,10 +10,10 @@ haskell-overlay.mkOverlay
     (haskell-overlay.sources (haskellPackagesFinal: haskellPackagesPrev: {
       "lsp" = "1.5.0.0";
       "lsp-types" = "1.5.0.0";
-      "sidekick" = source ../sidekick;
-      "sidekick-ghci" = source ../sidekick-ghci;
-      "sidekick-ghci-json" = source ../sidekick-ghci-json;
-      "sidekick-ghci-parsers" = source ../sidekick-ghci-parsers;
+      "sidekick" = ../sidekick;
+      "sidekick-ghci" = ../sidekick-ghci;
+      "sidekick-ghci-json" = ../sidekick-ghci-json;
+      "sidekick-ghci-parsers" = ../sidekick-ghci-parsers;
     }))
 
     (haskell-overlay.overrideCabal (haskellPackagesFinal: haskellPackagesPrev:
