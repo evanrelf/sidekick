@@ -98,7 +98,6 @@ start = liftIO do
     , Lsp.requestHandler Lsp.STextDocumentSemanticTokensFull \_request _responder -> pure ()
     , Lsp.requestHandler Lsp.STextDocumentSemanticTokensFullDelta \_request _responder -> pure ()
     , Lsp.requestHandler Lsp.STextDocumentSemanticTokensRange \_request _responder -> pure ()
-    , Lsp.requestHandler Lsp.SWorkspaceSemanticTokensRefresh \_request _responder -> pure ()
     ]
 
   interpretHandler :: Lsp.LanguageContextEnv Config -> M Lsp.<~> IO
