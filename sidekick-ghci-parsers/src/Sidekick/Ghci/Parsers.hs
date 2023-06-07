@@ -92,7 +92,7 @@ newtype UnknownMessage = UnknownMessage
 
 
 parseMessages :: Megaparsec.Parsec Void Text [Message]
-parseMessages = parseMessage `Megaparsec.sepBy` Megaparsec.char '\n'
+parseMessages = parseMessage `Megaparsec.sepBy` Megaparsec.newline
 
 
 parseMessage :: Megaparsec.Parsec Void Text Message
@@ -111,16 +111,16 @@ parseMessage = asum
 -- [5 of 5] Compiling Sidekick         ( src/Sidekick.hs, interpreted )
 parseLoadingMessage :: Megaparsec.Parsec Void Text LoadingMessage
 parseLoadingMessage = do
-  _ <- Megaparsec.char '['
+  _ <- "["
   _ <- Megaparsec.takeWhileP Nothing (/= ']')
-  _ <- Megaparsec.char ']'
-  _ <- Megaparsec.string " Compiling "
+  _ <- "]"
+  _ <- " Compiling "
   moduleName <- Megaparsec.takeWhileP Nothing (/= ' ')
   Megaparsec.hspace1
-  _ <- Megaparsec.string "( "
+  _ <- "( "
   file <- Text.unpack <$> Megaparsec.takeWhileP Nothing (/= ',')
   _ <- Megaparsec.takeWhileP Nothing (/= ')')
-  _ <- Megaparsec.char ')'
+  _ <- ")"
   pure LoadingMessage{moduleName, file}
 
 
@@ -140,20 +140,20 @@ parseDiagnosticMessage = asum
   normal = do
     location <- do
       file <- Text.unpack <$> Megaparsec.takeWhileP Nothing (/= ':')
-      _ <- Megaparsec.char ':'
+      _ <- ":"
       (spanBegin, spanEnd) <- parsePositions
       pure $ Just Location{file, spanBegin, spanEnd}
-    _ <- Megaparsec.char ' '
+    _ <- " "
     severity <-
-      Megaparsec.optional (Megaparsec.lookAhead (Megaparsec.string "warning: ")) <&> \case
+      Megaparsec.optional (Megaparsec.lookAhead "warning: ") <&> \case
         Just _ -> Warning
         Nothing -> Error
-    message <- mconcat <$> takeRestLine `Megaparsec.endBy1` Megaparsec.char '\n'
+    message <- mconcat <$> takeRestLine `Megaparsec.endBy1` Megaparsec.newline
     pure DiagnosticMessage{severity, location, message}
 
   -- <no location info>: can't find file: FILENAME
   cantFindFile = do
-    _ <- Megaparsec.string "<no location info>: can't find file: "
+    _ <- "<no location info>: can't find file: "
     file <- takeRestLine
     pure DiagnosticMessage
       { severity = Error
@@ -163,7 +163,7 @@ parseDiagnosticMessage = asum
 
   -- <no location info>: error:
   err = do
-    _ <- Megaparsec.string "<no location info>: error:\n"
+    _ <- "<no location info>: error:\n"
     message <- parseIndentedLines
     pure DiagnosticMessage
       { severity = Error
@@ -174,7 +174,7 @@ parseDiagnosticMessage = asum
   -- Module imports form a cycle:
   --   module `Module' (Module.hs) imports itself
   cycle = do
-    message <- Megaparsec.string "Module imports form a cycle:\n" <> parseIndentedLines
+    message <- "Module imports form a cycle:\n" <> parseIndentedLines
     pure DiagnosticMessage
       { severity = Error
       , location = Nothing
@@ -185,7 +185,7 @@ parseDiagnosticMessage = asum
 -- Loaded GHCi configuration from /Users/evanrelf/dotfiles/haskell/.ghci
 parseLoadConfigMessage :: Megaparsec.Parsec Void Text LoadConfigMessage
 parseLoadConfigMessage = do
-  _ <- Megaparsec.string "Loaded GHCi configuration from "
+  _ <- "Loaded GHCi configuration from "
   path <- Text.unpack <$> takeRestLine
   pure LoadConfigMessage{path}
 
@@ -203,7 +203,7 @@ parseUnknownMessage = do
 
 parseCwd :: Megaparsec.Parsec Void Text FilePath
 parseCwd = do
-  _ <- Megaparsec.string "current working directory:"
+  _ <- "current working directory:"
   Megaparsec.space1
   cwd <- takeRestLine
   pure (Text.unpack cwd)
@@ -217,11 +217,11 @@ parseModule :: Megaparsec.Parsec Void Text (Text, FilePath)
 parseModule = do
   moduleName <- Megaparsec.takeWhile1P Nothing (not . Char.isSpace)
   Megaparsec.space1
-  _ <- Megaparsec.char '('
+  _ <- "("
   Megaparsec.space1
   modulePath <- Megaparsec.takeWhile1P Nothing (/= ',')
   _ <- Megaparsec.takeWhile1P Nothing (/= ')')
-  _ <- Megaparsec.char ')'
+  _ <- ")"
   pure (moduleName, Text.unpack modulePath)
 
 
@@ -233,19 +233,19 @@ parsePositions = Megaparsec.try point <|> singleLine <|> multiLine
   where
   point = do
     line <- parseInt
-    _ <- Megaparsec.char ':'
+    _ <- ":"
     column <- parseInt
-    _ <- Megaparsec.char ':'
+    _ <- ":"
     let position = Position{line, column}
     pure (position, position)
 
   singleLine = do
     line <- parseInt
-    _ <- Megaparsec.char ':'
+    _ <- ":"
     columnBegin <- parseInt
-    _ <- Megaparsec.char '-'
+    _ <- "-"
     columnEnd <- parseInt
-    _ <- Megaparsec.char ':'
+    _ <- ":"
     pure
       ( Position{line, column = columnBegin}
       , Position{line, column = columnEnd}
@@ -253,9 +253,9 @@ parsePositions = Megaparsec.try point <|> singleLine <|> multiLine
 
   multiLine = do
     (lineBegin, columnBegin) <- parseIntPair
-    _ <- Megaparsec.char '-'
+    _ <- "-"
     (lineEnd, columnEnd) <- parseIntPair
-    _ <- Megaparsec.char ':'
+    _ <- ":"
     pure
       ( Position{line = lineBegin, column = columnBegin}
       , Position{line = lineEnd, column = columnEnd}
@@ -264,9 +264,9 @@ parsePositions = Megaparsec.try point <|> singleLine <|> multiLine
   parseInt = read <$> Megaparsec.some Megaparsec.digitChar
 
   parseIntPair =
-    Megaparsec.between (Megaparsec.char '(') (Megaparsec.char ')') do
+    Megaparsec.between "(" ")" do
       x <- parseInt
-      _ <- Megaparsec.char ','
+      _ <- ","
       y <- parseInt
       pure (x, y)
 
@@ -275,7 +275,7 @@ parseIndentedLines :: Megaparsec.Parsec Void Text Text
 parseIndentedLines = do
   let isHspace c = Char.isSpace c && c /= '\n' && c /= '\r'
   let parseLine = Megaparsec.takeWhile1P Nothing isHspace <> takeRestLine
-  lines <- parseLine `Megaparsec.sepBy` Megaparsec.char '\n'
+  lines <- parseLine `Megaparsec.sepBy` Megaparsec.newline
   pure (Text.unlines lines)
 
 
