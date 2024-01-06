@@ -1,5 +1,4 @@
 {-# LANGUAGE BlockArguments #-}
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ImportQualifiedPost #-}
 {-# LANGUAGE NamedFieldPuns #-}
@@ -31,12 +30,6 @@ import Streamly.Prelude qualified as Streamly
 import System.IO (Handle)
 import System.IO qualified as IO
 import System.Process qualified as Process
-
-#if !MIN_VERSION_streamly(0,8,0)
-import Streamly qualified
-#define fromZipAsync zipAsyncly
-#define fromEffect yieldM
-#endif
 
 -- | GHCi session handle.
 data Ghci s = Ghci
