@@ -6,8 +6,7 @@
 {-# LANGUAGE NamedFieldPuns #-}
 
 module Sidekick.Hie
-  ( Ghc.HieFile (..)
-  , readHieFile
+  ( readHieFile
   )
 where
 
