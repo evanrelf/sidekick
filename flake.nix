@@ -21,13 +21,10 @@
       in
       rec {
         packages = {
-          default = pkgs.haskellPackages.sidekick;
+          default = pkgs.haskellPackages.sidekick-ghci;
 
           inherit (pkgs.haskellPackages)
-            sidekick
             sidekick-ghci
-            sidekick-ghci-json
-            sidekick-ghci-parsers
             sidekick-shell
             ;
         };
