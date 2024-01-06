@@ -10,7 +10,8 @@ module Sidekick.Hie
   , sourcePath
   , moduleName
   , sourceCode
-  , tokens
+  , tokensWithText
+  , tokensWithLocations
   , Error (..)
   )
 where
@@ -57,7 +58,12 @@ moduleName hieFile =
 sourceCode :: Ghc.HieFile -> Text
 sourceCode hieFile = Text.decodeUtf8 hieFile.hie_hs_src
 
-tokens :: Ghc.HieFile -> [(Lexer.Token, Lexer.Loc)]
-tokens hieFile =
+tokensWithText :: Ghc.HieFile -> [(Lexer.Token, Text)]
+tokensWithText hieFile =
+  Lexer.tokenizeHaskell (sourceCode hieFile)
+    & fromMaybe (error "HieFile had invalid Haskell source code")
+
+tokensWithLocations :: Ghc.HieFile -> [(Lexer.Token, Lexer.Loc)]
+tokensWithLocations hieFile =
   Lexer.tokenizeHaskellLoc (sourceCode hieFile)
     & fromMaybe (error "HieFile had invalid Haskell source code")

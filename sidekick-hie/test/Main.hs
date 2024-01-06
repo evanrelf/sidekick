@@ -36,9 +36,16 @@ main = do
 
         Hie.sourceCode hieFile @?= expectedSourceCode
 
-        let adaptTokens = fmap (\(t, _l) -> show @Text t)
+        let tokenName = (\(t, _l) -> show @Text t)
 
-        adaptTokens (Hie.tokens hieFile) @?= expectedTokens
+        do
+          let actualTokens = fmap tokenName (Hie.tokensWithLocations hieFile)
+          actualTokens @?= expectedTokens
 
-        fmap adaptTokens (Lexer.tokenizeHaskellLoc expectedSourceCode) @?= Just expectedTokens
+        do
+          let actualTokens =
+                fmap
+                  (fmap tokenName)
+                  (Lexer.tokenizeHaskellLoc expectedSourceCode)
+          actualTokens @?= Just expectedTokens
     ]
