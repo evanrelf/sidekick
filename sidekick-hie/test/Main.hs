@@ -14,5 +14,6 @@ main = do
   Tasty.defaultMain $ Tasty.testGroup "sidekick-hie"
     [ HUnit.testCase "It works" do
         hieFile <- Hie.readHieFile ".hie/Sidekick/Hie.hie"
+        Hie.sourcePath hieFile @=? "src/Sidekick/Hie.hs"
         Hie.moduleName hieFile @=? "Sidekick.Hie"
     ]

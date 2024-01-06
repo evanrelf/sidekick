@@ -7,6 +7,7 @@
 
 module Sidekick.Hie
   ( readHieFile
+  , sourcePath
   , moduleName
   , sourceCode
   , Error (..)
@@ -41,6 +42,9 @@ readHieFile path = liftIO do
   Ghc.readHieFileWithVersion isCorrectVersion nameCache path >>= \case
     Left hieHeader -> Exception.throwIO $ IncompatibleVersion hieHeader
     Right (Ghc.HieFileResult _version _ghcVersion hieFile) -> pure hieFile
+
+sourcePath :: Ghc.HieFile -> FilePath
+sourcePath hieFile = hieFile.hie_hs_file
 
 moduleName :: Ghc.HieFile -> Text
 moduleName hieFile =
