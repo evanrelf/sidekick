@@ -201,7 +201,7 @@ receive ghci = liftIO do
     (foldStream stdoutStream)
     (foldStream stderrStream)
 
--- | Ignore output from the previously run command.
+-- | Discard output from the previously run command.
 receive_
   :: MonadIO m
   => Ghci s
