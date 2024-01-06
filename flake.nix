@@ -25,6 +25,7 @@
 
           inherit (pkgs.haskellPackages)
             sidekick-ghci
+            sidekick-hie
             sidekick-shell
             ;
         };

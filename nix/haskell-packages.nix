@@ -9,6 +9,7 @@ haskell-overlay.mkOverlay
   extensions = [
     (haskell-overlay.sources (haskellPackagesFinal: haskellPackagesPrev: {
       "sidekick-ghci" = ../sidekick-ghci;
+      "sidekick-hie" = ../sidekick-hie;
     }))
 
     (haskell-overlay.overrideCabal (haskellPackagesFinal: haskellPackagesPrev: {
@@ -23,6 +24,7 @@ haskell-overlay.mkOverlay
         haskellPackagesFinal.shellFor {
           packages = p: [
             p.sidekick-ghci
+            p.sidekick-hie
           ];
 
           buildInputs = [
