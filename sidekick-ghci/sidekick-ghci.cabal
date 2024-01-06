@@ -16,15 +16,12 @@ extra-source-files:
   LICENSE
   README.md
 
-
 flag streamly-optimizations
   manual: True
-
 
 flag fusion-plugin
   default: False
   manual: True
-
 
 common common
   build-depends: base >= 4.12 && < 5.0
@@ -41,7 +38,6 @@ common common
     -Wredundant-constraints
     -fshow-warning-groups
 
-
 common streamly
   if flag(streamly-optimizations)
     ghc-options:
@@ -52,7 +48,6 @@ common streamly
   if flag(fusion-plugin)
     build-depends: fusion-plugin
     ghc-options: -fplugin=Fusion.Plugin
-
 
 library
   import:
@@ -68,7 +63,6 @@ library
   exposed-modules:
     Sidekick.Ghci
     Sidekick.Ghci.Internal
-
 
 test-suite test
   import:

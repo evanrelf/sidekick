@@ -38,25 +38,19 @@ import qualified Streamly
 #define fromEffect yieldM
 #endif
 
-
 -- | GHCi session handle.
 data Ghci s = Ghci
   { stdinHandle :: Handle
     -- ^ Handle for GHCi session's @stdin@ stream
-
   , stdoutHandle :: Handle
     -- ^ Handle for GHCi session's @stdout@ stream
-
   , stderrHandle :: Handle
     -- ^ Handle for GHCi session's @stderr@ stream
-
   , processHandle :: Process.ProcessHandle
     -- ^ Process handle for GHCi session
-
   , promptNumberTVar :: STM.TVar Integer
     -- ^ Mutable reference to last prompt number
   }
-
 
 -- | Run operations on a live GHCi session.
 --
@@ -125,7 +119,6 @@ withGhci command action = withRunInIO \unliftIO ->
 
     pure ghci
 
-
 -- | Run a command in GHCi, collecting its output.
 run
   :: MonadIO m
@@ -139,7 +132,6 @@ run ghci command = do
   send ghci command
   receive ghci
 
-
 -- | Run a command in GHCi, ignoring its output.
 run_
   :: MonadIO m
@@ -151,7 +143,6 @@ run_
 run_ ghci command = do
   send ghci command
   receive_ ghci
-
 
 -- | Run a command in GHCi.
 send
@@ -173,7 +164,6 @@ send ghci command = liftIO do
   Text.hPutStrLn (stdinHandle ghci)
     ("SIDEKICK.hPutStrLn SIDEKICK.stderr \"\\n" <> separator n <> "\"")
 
-
 -- | Stream output line-by-line from the previously run command.
 receiveStreaming
   :: Streamly.MonadAsync m
@@ -193,7 +183,6 @@ receiveStreaming ghci = liftIO do
     ( streamHandle (stdoutHandle ghci)
     , streamHandle (stderrHandle ghci)
     )
-
 
 -- | Collect output from the previously run command.
 receive
@@ -221,7 +210,6 @@ receive ghci = liftIO do
     & Streamly.toList
     & fmap head
 
-
 -- | Ignore output from the previously run command.
 receive_
   :: MonadIO m
@@ -233,7 +221,6 @@ receive_ ghci = liftIO do
 
   Streamly.drain $ stdoutStream `Streamly.parallel` stderrStream
 
-
 -- | Send Ctrl-C (@SIGINT@) to GHCi session. Useful for interrupting
 -- long-running commands.
 cancel
@@ -242,7 +229,6 @@ cancel
   -- ^ GHCi session handle
   -> m ()
 cancel ghci = liftIO $ Process.interruptProcessGroupOf (processHandle ghci)
-
 
 -- | Interact with the GHCi session directly via @stdin@ and @stdout@ +
 -- @stderr@. Useful for debugging and experimenting.
@@ -264,11 +250,9 @@ interact ghci = liftIO do
       )
     & Streamly.drain
 
-
 -- | Prompt separator text
 separator :: Integer -> Text
 separator n = Text.pack ("__sidekick__" <> show n <> "__")
-
 
 hGetLines
   :: MonadIO (t m)

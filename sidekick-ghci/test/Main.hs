@@ -14,7 +14,6 @@ import qualified UnliftIO.Concurrent as Concurrent
 import qualified UnliftIO.Environment as Environment
 import qualified UnliftIO.Timeout as Timeout
 
-
 main :: IO ()
 main = do
   -- Don't run tests in parallel by default, because parallel `cabal repl`
@@ -36,7 +35,6 @@ main = do
         ]
     ]
 
-
 testExpressions :: Text -> Tasty.TestTree
 testExpressions ghciCommand =
   HUnit.testCase "evaluates expressions" $ Ghci.withGhci ghciCommand \ghci -> do
@@ -50,7 +48,6 @@ testExpressions ghciCommand =
 
     Ghci.run ghci "1 + foo"
       `shouldReturn` ("", "\n<interactive>:21:5: error: Variable not in scope: foo")
-
 
 testCommands :: Text -> Tasty.TestTree
 testCommands ghciCommand =
@@ -68,7 +65,6 @@ testCommands ghciCommand =
 
     Ghci.run ghci ":set -foo-bar"
       `shouldReturn` ("", "Some flags have not been recognized: -foo-bar")
-
 
 testCancel :: Text -> Tasty.TestTree
 testCancel ghciCommand =
@@ -90,7 +86,6 @@ testCancel ghciCommand =
   in
   HUnit.testCase "cancels operations" do
     scenario `shouldReturn` Just ()
-
 
 shouldReturn :: Eq a => Show a => IO a -> a -> HUnit.Assertion
 shouldReturn action actual = do
