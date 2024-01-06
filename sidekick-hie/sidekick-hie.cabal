@@ -35,7 +35,7 @@ library
   import: common
   hs-source-dirs: src
   build-depends:
-    , ghc
+    , ghc-lib == 9.4.8.20231111
     , text
   exposed-modules:
     Sidekick.Hie
