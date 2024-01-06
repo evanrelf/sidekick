@@ -8,6 +8,7 @@ haskell-overlay.mkOverlay
 {
   extensions = [
     (haskell-overlay.sources (haskellPackagesFinal: haskellPackagesPrev: {
+      "sidekick" = ../sidekick;
       "sidekick-ghci" = ../sidekick-ghci;
       "sidekick-hie" = ../sidekick-hie;
     }))
@@ -23,6 +24,7 @@ haskell-overlay.mkOverlay
       "sidekick-shell" =
         haskellPackagesFinal.shellFor {
           packages = p: [
+            p.sidekick
             p.sidekick-ghci
             p.sidekick-hie
           ];
