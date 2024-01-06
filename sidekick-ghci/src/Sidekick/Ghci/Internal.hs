@@ -16,6 +16,7 @@
 
 module Sidekick.Ghci.Internal where
 
+import Control.Concurrent.Async qualified as Async
 import Control.Concurrent.STM qualified as STM
 import Control.Exception qualified as Exception
 import Control.Monad (unless)
@@ -26,7 +27,9 @@ import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Text.IO qualified as Text
 import Prelude hiding (interact)
-import Streamly.Prelude qualified as Streamly
+import Streamly.Data.Fold qualified as Fold
+import Streamly.Data.Stream (Stream)
+import Streamly.Data.Stream qualified as Stream
 import System.IO (Handle)
 import System.IO qualified as IO
 import System.Process qualified as Process
@@ -159,18 +162,18 @@ send ghci command = liftIO do
 
 -- | Stream output line-by-line from the previously run command.
 receiveStreaming
-  :: Streamly.MonadAsync m
+  :: MonadIO m
   => Ghci s
   -- ^ GHCi session handle
-  -> m (Streamly.SerialT m Text, Streamly.SerialT m Text)
+  -> m (Stream m Text, Stream m Text)
   -- ^ @stdout@ and @stderr@ streams from GHCi
 receiveStreaming ghci = liftIO do
   n <- STM.atomically $ STM.readTVar (promptNumberTVar ghci)
 
-  let streamHandle :: Streamly.MonadAsync m => Handle -> Streamly.SerialT m Text
+  let streamHandle :: MonadIO m => Handle -> Stream m Text
       streamHandle handle =
         hGetLines handle
-          & Streamly.takeWhile (/= separator n)
+          & Stream.takeWhile (/= separator n)
 
   pure
     ( streamHandle (stdoutHandle ghci)
@@ -187,21 +190,16 @@ receive
 receive ghci = liftIO do
   (stdoutStream, stderrStream) <- receiveStreaming ghci
 
-  let foldStream :: Streamly.SerialT IO Text -> IO Text
+  let foldStream :: Stream IO Text -> IO Text
       foldStream stream =
         stream
-          & Streamly.map (`Text.snoc` '\n')
-          & Streamly.foldl' (<>) mempty
+          & fmap (`Text.snoc` '\n')
+          & Stream.fold (Fold.foldl' (<>) mempty)
           & fmap Text.stripEnd
 
-  let stream :: Streamly.ZipAsyncM IO (Text, Text)
-      stream = (,)
-        <$> Streamly.fromEffect (foldStream stdoutStream)
-        <*> Streamly.fromEffect (foldStream stderrStream)
-
-  Streamly.fromZipAsync stream
-    & Streamly.toList
-    & fmap head
+  Async.concurrently
+    (foldStream stdoutStream)
+    (foldStream stderrStream)
 
 -- | Ignore output from the previously run command.
 receive_
@@ -212,7 +210,9 @@ receive_
 receive_ ghci = liftIO do
   (stdoutStream, stderrStream) <- receiveStreaming ghci
 
-  Streamly.drain $ stdoutStream `Streamly.parallel` stderrStream
+  Async.concurrently_
+    (Stream.fold Fold.drain stdoutStream)
+    (Stream.fold Fold.drain stderrStream)
 
 -- | Send Ctrl-C (@SIGINT@) to GHCi session. Useful for interrupting
 -- long-running commands.
@@ -236,26 +236,25 @@ interact
   -> m ()
 interact ghci = liftIO do
   hGetLines IO.stdin
-    & Streamly.mapM (run ghci)
-    & Streamly.trace (\(out, err) -> do
+    & Stream.mapM (run ghci)
+    & Stream.trace (\(out, err) -> do
         unless (Text.null err) $ Text.hPutStrLn IO.stderr err
         unless (Text.null out) $ Text.hPutStrLn IO.stdout out
       )
-    & Streamly.drain
+    & Stream.fold Fold.drain
 
 -- | Prompt separator text
 separator :: Integer -> Text
 separator n = Text.pack ("__sidekick__" <> show n <> "__")
 
-hGetLines
-  :: MonadIO (t m)
-  => Streamly.IsStream t
-  => Streamly.MonadAsync m
-  => Handle
-  -> t m Text
-hGetLines handle = do
-  liftIO $ IO.hSetBuffering handle IO.LineBuffering
-  flip Streamly.unfoldrM () \() -> liftIO do
+hGetLines :: MonadIO m => Handle -> Stream m Text
+hGetLines handle =
+  Stream.unfoldrM step seed
+    & Stream.before (IO.hSetBuffering handle IO.LineBuffering)
+    & Stream.morphInner liftIO
+  where
+  seed = ()
+  step () = do
     eof <- IO.hIsEOF handle
     if eof then
       pure Nothing

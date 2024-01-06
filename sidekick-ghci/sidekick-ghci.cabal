@@ -55,9 +55,10 @@ library
     , streamly
   hs-source-dirs: src
   build-depends:
+    , async
     , process
     , stm
-    , streamly      >= 0.9 && < 0.11
+    , streamly-core
     , text
     , unliftio-core
   exposed-modules:

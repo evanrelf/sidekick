@@ -13,7 +13,8 @@ haskell-overlay.mkOverlay
 
     (haskell-overlay.overrideCabal (haskellPackagesFinal: haskellPackagesPrev: {
       "sidekick-ghci" = {
-        doCheck = false;
+        # TODO: Fix tests failing in Nix
+        checkPhase = "";
       };
     }))
 
