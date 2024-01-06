@@ -1,6 +1,7 @@
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ImportQualifiedPost #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
@@ -16,24 +17,23 @@
 
 module Sidekick.Ghci.Internal where
 
+import Control.Concurrent.STM qualified as STM
+import Control.Exception qualified as Exception
 import Control.Monad (unless)
 import Control.Monad.IO.Class (MonadIO (..))
 import Control.Monad.IO.Unlift (MonadUnliftIO (..))
 import Data.Function ((&))
 import Data.Text (Text)
-import System.IO (Handle)
+import Data.Text qualified as Text
+import Data.Text.IO qualified as Text
 import Prelude hiding (interact)
-
-import qualified Control.Concurrent.STM as STM
-import qualified Control.Exception as Exception
-import qualified Data.Text as Text
-import qualified Data.Text.IO as Text
-import qualified Streamly.Prelude as Streamly
-import qualified System.IO as IO
-import qualified System.Process as Process
+import Streamly.Prelude qualified as Streamly
+import System.IO (Handle)
+import System.IO qualified as IO
+import System.Process qualified as Process
 
 #if !MIN_VERSION_streamly(0,8,0)
-import qualified Streamly
+import Streamly qualified
 #define fromZipAsync zipAsyncly
 #define fromEffect yieldM
 #endif

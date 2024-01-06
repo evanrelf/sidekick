@@ -1,18 +1,18 @@
 {-# LANGUAGE BlockArguments #-}
+{-# LANGUAGE ImportQualifiedPost #-}
 {-# LANGUAGE NumericUnderscores #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Main (main) where
 
+import Sidekick.Ghci qualified as Ghci
+import Test.Tasty qualified as Tasty
 import Test.Tasty.HUnit ((@?=))
-
-import qualified Sidekick.Ghci as Ghci
-import qualified Test.Tasty as Tasty
-import qualified Test.Tasty.HUnit as HUnit
-import qualified UnliftIO.Async as Async
-import qualified UnliftIO.Concurrent as Concurrent
-import qualified UnliftIO.Environment as Environment
-import qualified UnliftIO.Timeout as Timeout
+import Test.Tasty.HUnit qualified as HUnit
+import UnliftIO.Async qualified as Async
+import UnliftIO.Concurrent qualified as Concurrent
+import UnliftIO.Environment qualified as Environment
+import UnliftIO.Timeout qualified as Timeout
 
 main :: IO ()
 main = do
