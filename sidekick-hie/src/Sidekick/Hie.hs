@@ -7,7 +7,7 @@
 
 module Sidekick.Hie
   ( readHieFile
-  , SidekickHieError (..)
+  , Error (..)
   )
 where
 
@@ -22,7 +22,7 @@ import GHC.Iface.Ext.Binary qualified as Ghc
 import GHC.Iface.Ext.Types qualified as Ghc (HieFile (..), hieVersion)
 import GHC.Types.Name.Cache qualified as Ghc (initNameCache)
 
-data SidekickHieError
+data Error
   = IncompatibleVersion Ghc.HieHeader
   deriving stock (Show)
   deriving anyclass (Exception)
