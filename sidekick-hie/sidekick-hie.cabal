@@ -31,6 +31,12 @@ common common
     -Wredundant-constraints
     -fshow-warning-groups
 
+common executable
+  ghc-options:
+    -threaded
+    -rtsopts
+    -with-rtsopts=-N
+
 library
   import: common
   hs-source-dirs: src
@@ -45,7 +51,9 @@ library
     -hiedir .hie/src/
 
 test-suite test
-  import: common
+  import:
+    , common
+    , executable
   mixins:
     , base hiding (Prelude)
     , relude (Relude as Prelude)
@@ -62,8 +70,5 @@ test-suite test
   other-modules:
     Example
   ghc-options:
-    -threaded
-    -rtsopts
-    -with-rtsopts=-N
     -fwrite-ide-info
     -hiedir .hie/test/
