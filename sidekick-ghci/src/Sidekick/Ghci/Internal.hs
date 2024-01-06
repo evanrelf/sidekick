@@ -63,6 +63,7 @@ withGhci command action = withRunInIO \unliftIO ->
   Process.withCreateProcess processConfig \i o e p -> do
     ghci <- setup i o e p
     unliftIO $ action ghci
+
   where
   processConfig :: Process.CreateProcess
   processConfig =
@@ -243,10 +244,11 @@ interact ghci = liftIO do
       )
     & Stream.fold Fold.drain
 
--- | Prompt separator text
+-- | Prompt separator text.
 separator :: Integer -> Text
 separator n = Text.pack ("__sidekick__" <> show n <> "__")
 
+-- | Stream lines of text from a handle.
 hGetLines :: MonadIO m => Handle -> Stream m Text
 hGetLines handle =
   Stream.unfoldrM step seed
