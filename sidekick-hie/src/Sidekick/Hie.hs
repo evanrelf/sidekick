@@ -3,10 +3,12 @@
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE ImportQualifiedPost #-}
 {-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE OverloadedRecordDot #-}
 
 module Sidekick.Hie
   ( readHieFile
+  , moduleName
+  , sourceCode
   , Error (..)
   )
 where
@@ -14,6 +16,9 @@ where
 import Control.Exception (Exception)
 import Control.Exception qualified as Exception
 import Control.Monad.IO.Class (MonadIO (..))
+import Data.Text (Text)
+import Data.Text qualified as Text
+import Data.Text.Encoding qualified as Text
 import GHC.Iface.Ext.Binary qualified as Ghc
   ( HieFileResult (..)
   , HieHeader
@@ -21,6 +26,8 @@ import GHC.Iface.Ext.Binary qualified as Ghc
   )
 import GHC.Iface.Ext.Types qualified as Ghc (HieFile (..), hieVersion)
 import GHC.Types.Name.Cache qualified as Ghc (initNameCache)
+import GHC.Unit.Module.Name qualified as Ghc (moduleNameString)
+import GHC.Unit.Types qualified as Ghc (GenModule (..))
 
 data Error
   = IncompatibleVersion Ghc.HieHeader
@@ -34,3 +41,10 @@ readHieFile path = liftIO do
   Ghc.readHieFileWithVersion isCorrectVersion nameCache path >>= \case
     Left hieHeader -> Exception.throwIO $ IncompatibleVersion hieHeader
     Right (Ghc.HieFileResult _version _ghcVersion hieFile) -> pure hieFile
+
+moduleName :: Ghc.HieFile -> Text
+moduleName hieFile =
+  Text.pack (Ghc.moduleNameString hieFile.hie_module.moduleName)
+
+sourceCode :: Ghc.HieFile -> Text
+sourceCode hieFile = Text.decodeUtf8 hieFile.hie_hs_src

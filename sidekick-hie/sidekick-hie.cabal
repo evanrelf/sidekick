@@ -36,5 +36,6 @@ library
   hs-source-dirs: src
   build-depends:
     , ghc
+    , text
   exposed-modules:
     Sidekick.Hie
