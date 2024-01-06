@@ -7,6 +7,7 @@
 
 module Sidekick.Hie
   ( readHieFile
+  , SidekickHieError (..)
   )
 where
 
