@@ -18,6 +18,10 @@ haskell-overlay.mkOverlay
         # TODO: Fix tests failing in Nix
         checkPhase = "";
       };
+      "sidekick-hie" = {
+        # TODO: Get tests working in Nix
+        checkPhase = "";
+      };
     }))
 
     (haskellPackagesFinal: haskellPackagesPrev: {

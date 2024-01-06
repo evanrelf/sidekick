@@ -39,3 +39,25 @@ library
     , text
   exposed-modules:
     Sidekick.Hie
+  ghc-options:
+    -fwrite-ide-info
+    -hiedir .hie
+
+test-suite test
+  import: common
+  mixins:
+    , base hiding (Prelude)
+    , relude (Relude as Prelude)
+    , relude
+  type: exitcode-stdio-1.0
+  main-is: Main.hs
+  hs-source-dirs: test
+  build-depends:
+    , relude
+    , sidekick-hie
+    , tasty
+    , tasty-hunit
+  ghc-options:
+    -threaded
+    -rtsopts
+    -with-rtsopts=-N
