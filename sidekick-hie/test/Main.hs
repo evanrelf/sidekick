@@ -10,12 +10,14 @@ import Sidekick.Hie qualified as Hie
 import Test.Tasty qualified as Tasty
 import Test.Tasty.HUnit ((@?=))
 import Test.Tasty.HUnit qualified as HUnit
+import UnliftIO.Exception qualified as Exception
 
 main :: IO ()
 main = do
   Tasty.defaultMain $ Tasty.testGroup "sidekick-hie"
     [ HUnit.testCase "It works" do
-        hieFile <- Hie.readHieFile ".hie/test/Example.hie"
+        hieFile <-
+          Exception.fromEitherM $ Hie.readHieFile ".hie/test/Example.hie"
 
         Hie.sourcePath hieFile @?= "test/Example.hs"
 

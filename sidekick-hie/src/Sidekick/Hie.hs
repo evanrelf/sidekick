@@ -17,9 +17,9 @@ module Sidekick.Hie
 where
 
 import Control.Exception (Exception)
-import Control.Exception qualified as Exception
 import Control.Monad.IO.Class (MonadIO (..))
 import Data.Function ((&))
+import Data.Functor ((<&>))
 import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import Data.Text qualified as Text
@@ -40,13 +40,13 @@ data Error
   deriving stock (Show)
   deriving anyclass (Exception)
 
-readHieFile :: MonadIO m => FilePath -> m Ghc.HieFile
+readHieFile :: MonadIO m => FilePath -> m (Either Error Ghc.HieFile)
 readHieFile path = liftIO do
   let isCorrectVersion (version, _ghcVersion) = version == Ghc.hieVersion
   nameCache <- Ghc.initNameCache 'x' []
-  Ghc.readHieFileWithVersion isCorrectVersion nameCache path >>= \case
-    Left hieHeader -> Exception.throwIO $ IncompatibleVersion hieHeader
-    Right (Ghc.HieFileResult _version _ghcVersion hieFile) -> pure hieFile
+  Ghc.readHieFileWithVersion isCorrectVersion nameCache path <&> \case
+    Left hieHeader -> Left (IncompatibleVersion hieHeader)
+    Right (Ghc.HieFileResult _version _ghcVersion hieFile) -> Right hieFile
 
 sourcePath :: Ghc.HieFile -> FilePath
 sourcePath hieFile = hieFile.hie_hs_file

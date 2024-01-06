@@ -67,6 +67,7 @@ test-suite test
     , sidekick-hie
     , tasty
     , tasty-hunit
+    , unliftio
   other-modules:
     Example
   ghc-options:
