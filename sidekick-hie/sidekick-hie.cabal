@@ -42,7 +42,7 @@ library
     Sidekick.Hie
   ghc-options:
     -fwrite-ide-info
-    -hiedir .hie
+    -hiedir .hie/src/
 
 test-suite test
   import: common
@@ -54,11 +54,16 @@ test-suite test
   main-is: Main.hs
   hs-source-dirs: test
   build-depends:
+    , ghc-syntax-highlighter
     , relude
     , sidekick-hie
     , tasty
     , tasty-hunit
+  other-modules:
+    Example
   ghc-options:
     -threaded
     -rtsopts
     -with-rtsopts=-N
+    -fwrite-ide-info
+    -hiedir .hie/test/

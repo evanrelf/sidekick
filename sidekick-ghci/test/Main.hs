@@ -90,4 +90,4 @@ testCancel ghciCommand =
 shouldReturn :: Eq a => Show a => IO a -> a -> HUnit.Assertion
 shouldReturn action actual = do
   expected <- action
-  expected @?= actual
+  actual @?= expected
