@@ -10,6 +10,7 @@ module Sidekick.Hie
   , sourcePath
   , moduleName
   , sourceCode
+  , tokens
   , Error (..)
   )
 where
@@ -17,6 +18,8 @@ where
 import Control.Exception (Exception)
 import Control.Exception qualified as Exception
 import Control.Monad.IO.Class (MonadIO (..))
+import Data.Function ((&))
+import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Text.Encoding qualified as Text
@@ -26,6 +29,7 @@ import GHC.Iface.Ext.Binary qualified as Ghc
   , readHieFileWithVersion
   )
 import GHC.Iface.Ext.Types qualified as Ghc (HieFile (..), hieVersion)
+import GHC.SyntaxHighlighter qualified as Lexer
 import GHC.Types.Name.Cache qualified as Ghc (initNameCache)
 import GHC.Unit.Module.Name qualified as Ghc (moduleNameString)
 import GHC.Unit.Types qualified as Ghc (GenModule (..))
@@ -52,3 +56,8 @@ moduleName hieFile =
 
 sourceCode :: Ghc.HieFile -> Text
 sourceCode hieFile = Text.decodeUtf8 hieFile.hie_hs_src
+
+tokens :: Ghc.HieFile -> [(Lexer.Token, Lexer.Loc)]
+tokens hieFile =
+  Lexer.tokenizeHaskellLoc (sourceCode hieFile)
+    & fromMaybe (error "HieFile had invalid Haskell source code")

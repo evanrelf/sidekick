@@ -36,6 +36,7 @@ library
   hs-source-dirs: src
   build-depends:
     , ghc-lib == 9.4.8.20231111
+    , ghc-syntax-highlighter == 0.0.9.0
     , text
   exposed-modules:
     Sidekick.Hie
